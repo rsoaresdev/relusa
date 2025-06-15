@@ -162,19 +162,7 @@ const nextConfig = {
         ],
         destination: '/:path/',
         permanent: true,
-      },
-      // Redirecionar www para non-www
-      {
-        source: '/:path*',
-        has: [
-          {
-            type: 'host',
-            value: 'www.relusa.pt',
-          },
-        ],
-        permanent: true,
-        destination: 'https://relusa.pt/:path*',
-      },
+      }
     ];
   },
 };
