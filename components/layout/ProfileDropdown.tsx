@@ -22,14 +22,12 @@ import {
   isUserAdmin,
   performLogout,
 } from "@/lib/supabase/config";
-import { useRouter } from "next/navigation";
 
 export default function ProfileDropdown() {
   const [user, setUser] = useState<UserType | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
   const [isInitialized, setIsInitialized] = useState(false);
-  const router = useRouter();
 
   const fetchUserData = async () => {
     try {

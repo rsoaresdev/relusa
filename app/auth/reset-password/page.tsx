@@ -53,7 +53,7 @@ export default function ResetPasswordPage() {
         }
         
         setIsValidSession(true);
-      } catch (error) {
+      } catch {
         toast.error(
           "Erro ao verificar sessão. Por favor, solicite um novo link de redefinição."
         );

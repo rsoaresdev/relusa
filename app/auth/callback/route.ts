@@ -55,7 +55,7 @@ export async function GET(request: NextRequest) {
     try {
       logDev("Processando OAuth code callback");
       // Trocar o código por uma sessão
-      const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+      const { error } = await supabase.auth.exchangeCodeForSession(code);
       
       if (error) {
         console.error("[Auth Callback] Erro ao trocar código por sessão:", error);
