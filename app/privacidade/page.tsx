@@ -32,7 +32,7 @@ export default function PrivacidadePage() {
               Política de Privacidade
             </h1>
             <p className="text-xl text-gray-600 dark:text-gray-400">
-              Última atualização: 15 de junho de 2025
+              Última atualização: 16 de junho de 2025
             </p>
           </div>
         </div>
@@ -222,10 +222,16 @@ export default function PrivacidadePage() {
                     </h2>
                   </div>
                   <p>
-                    A Relusa está comprometida em proteger a sua privacidade e os seus dados pessoais. Esta Política de Privacidade explica como recolhemos, utilizamos e protegemos as suas informações quando utiliza os nossos serviços de lavagem automóvel a seco.
+                    A Relusa está comprometida em proteger a sua privacidade e
+                    os seus dados pessoais. Esta Política de Privacidade explica
+                    como recolhemos, utilizamos e protegemos as suas informações
+                    quando utiliza os nossos serviços de lavagem automóvel a
+                    seco.
                   </p>
                   <p>
-                    Tratamos os seus dados pessoais em conformidade com o Regulamento Geral sobre a Proteção de Dados (RGPD) e demais legislação aplicável em Portugal.
+                    Tratamos os seus dados pessoais em conformidade com o
+                    Regulamento Geral sobre a Proteção de Dados (RGPD) e demais
+                    legislação aplicável em Portugal.
                   </p>
                 </div>
 
@@ -240,27 +246,37 @@ export default function PrivacidadePage() {
                     </h2>
                   </div>
                   <p>
-                    Para prestar os nossos serviços, recolhemos os seguintes tipos de informações:
+                    Para prestar os nossos serviços, recolhemos os seguintes
+                    tipos de informações:
                   </p>
-                  <h3 className="text-lg font-semibold mt-4 mb-2">Dados Pessoais</h3>
+                  <h3 className="text-lg font-semibold mt-4 mb-2">
+                    Dados Pessoais
+                  </h3>
                   <ul className="pl-6">
                     <li>Nome completo</li>
                     <li>Número de telefone</li>
                     <li>Endereço de email</li>
                     <li>Morada para prestação do serviço</li>
-                    <li>NIF (quando solicitada fatura)</li>
                   </ul>
 
-                  <h3 className="text-lg font-semibold mt-4 mb-2">Dados do Veículo</h3>
+                  <h3 className="text-lg font-semibold mt-4 mb-2">
+                    Dados do Veículo
+                  </h3>
                   <ul className="pl-6">
                     <li>Matrícula</li>
                     <li>Marca e modelo</li>
                     <li>Cor</li>
                     <li>Tipo de carroçaria</li>
                     <li>Histórico de serviços realizados</li>
+                    <li>
+                      Fotografias do estado geral do veículo antes e depois do
+                      serviço, especialmente danos pré-existentes
+                    </li>
                   </ul>
 
-                  <h3 className="text-lg font-semibold mt-4 mb-2">Dados de Utilização do Website</h3>
+                  <h3 className="text-lg font-semibold mt-4 mb-2">
+                    Dados de Utilização do Website
+                  </h3>
                   <ul className="pl-6">
                     <li>Endereço IP</li>
                     <li>Tipo de navegador</li>
@@ -269,9 +285,13 @@ export default function PrivacidadePage() {
                     <li>Data e hora dos acessos</li>
                   </ul>
 
-                  <h3 className="text-lg font-semibold mt-4 mb-2">Dados de Pagamento</h3>
+                  <h3 className="text-lg font-semibold mt-4 mb-2">
+                    Dados de Pagamento
+                  </h3>
                   <p>
-                    Não armazenamos dados de cartões de crédito ou débito. Todas as transações são processadas através de prestadores de serviços de pagamento seguros.
+                    Não armazenamos dados de cartões de crédito ou débito. Todas
+                    as transações são processadas através de prestadores de
+                    serviços de pagamento seguros.
                   </p>
                 </div>
 
@@ -285,19 +305,20 @@ export default function PrivacidadePage() {
                       Como Utilizamos as Suas Informações
                     </h2>
                   </div>
-                  <p>
-                    Utilizamos as suas informações para os seguintes fins:
-                  </p>
-                  <h3 className="text-lg font-semibold mt-4 mb-2">Prestação de Serviços</h3>
+                  <p>Utilizamos as suas informações para os seguintes fins:</p>
+                  <h3 className="text-lg font-semibold mt-4 mb-2">
+                    Prestação de Serviços
+                  </h3>
                   <ul className="pl-6">
                     <li>Agendamento e gestão de marcações</li>
                     <li>Prestação dos serviços de lavagem</li>
-                    <li>Emissão de faturas</li>
                     <li>Gestão do programa de fidelidade</li>
                     <li>Comunicação sobre o serviço agendado</li>
                   </ul>
 
-                  <h3 className="text-lg font-semibold mt-4 mb-2">Melhoria dos Serviços</h3>
+                  <h3 className="text-lg font-semibold mt-4 mb-2">
+                    Melhoria dos Serviços
+                  </h3>
                   <ul className="pl-6">
                     <li>Análise de padrões de utilização</li>
                     <li>Desenvolvimento de novos serviços</li>
@@ -307,10 +328,13 @@ export default function PrivacidadePage() {
 
                   <h3 className="text-lg font-semibold mt-4 mb-2">Marketing</h3>
                   <ul className="pl-6">
-                    <li>Envio de newsletters (mediante consentimento)</li>
                     <li>Informação sobre promoções e novos serviços</li>
                     <li>Pesquisas de satisfação</li>
                     <li>Comunicação de benefícios do programa de fidelidade</li>
+                    <li>
+                      Partilha profissional de serviços realizados nas redes
+                      sociais da Relusa (Instagram)
+                    </li>
                   </ul>
                 </div>
 
@@ -325,15 +349,22 @@ export default function PrivacidadePage() {
                     </h2>
                   </div>
                   <p>
-                    A Relusa não vende, aluga ou partilha os seus dados pessoais com terceiros, exceto:
+                    A Relusa não vende, aluga ou partilha os seus dados pessoais
+                    com terceiros, exceto:
                   </p>
                   <ul className="pl-6">
-                    <li>Prestadores de serviços que nos auxiliam na operação (ex: processamento de pagamentos)</li>
+                    <li>
+                      Prestadores de serviços que nos auxiliam na operação (ex:
+                      processamento de pagamentos)
+                    </li>
                     <li>Autoridades competentes, quando legalmente exigido</li>
-                    <li>Parceiros de confiança, com o seu consentimento explícito</li>
+                    <li>
+                      Parceiros de confiança, com o seu consentimento explícito
+                    </li>
                   </ul>
                   <p className="mt-4">
-                    Todos os nossos parceiros estão vinculados a acordos de confidencialidade e proteção de dados.
+                    Todos os nossos parceiros estão vinculados a acordos de
+                    confidencialidade e proteção de dados.
                   </p>
                 </div>
 
@@ -348,7 +379,8 @@ export default function PrivacidadePage() {
                     </h2>
                   </div>
                   <p>
-                    Implementamos medidas técnicas e organizacionais para proteger os seus dados:
+                    Implementamos medidas técnicas e organizacionais para
+                    proteger os seus dados:
                   </p>
                   <ul className="pl-6">
                     <li>Encriptação SSL em todas as comunicações</li>
@@ -356,6 +388,7 @@ export default function PrivacidadePage() {
                     <li>Monitorização regular dos sistemas</li>
                     <li>Formação em proteção de dados para colaboradores</li>
                     <li>Backups regulares e seguros</li>
+                    <li>Encriptação de dados sensíveis ponta-a-ponta</li>
                   </ul>
                 </div>
 
@@ -369,20 +402,28 @@ export default function PrivacidadePage() {
                       Os Seus Direitos
                     </h2>
                   </div>
-                  <p>
-                    Como titular dos dados, tem os seguintes direitos:
-                  </p>
+                  <p>Como titular dos dados, tem os seguintes direitos:</p>
                   <ul className="pl-6">
                     <li>Acesso aos seus dados pessoais</li>
                     <li>Retificação de dados incorretos</li>
-                    <li>Eliminação dos seus dados (&quot;direito ao esquecimento&quot;)</li>
+                    <li>
+                      Eliminação dos seus dados (&quot;direito ao
+                      esquecimento&quot;)
+                    </li>
                     <li>Limitação do tratamento</li>
                     <li>Portabilidade dos dados</li>
                     <li>Oposição ao tratamento</li>
                     <li>Retirada do consentimento</li>
                   </ul>
                   <p className="mt-4">
-                    Para exercer qualquer destes direitos, contacte-nos através do email <a href="mailto:geral@relusa.pt">geral@relusa.pt</a>.
+                    Para exercer qualquer destes direitos, contacte-nos através
+                    do email{" "}
+                    <a href="mailto:geral@relusa.pt">geral@relusa.pt</a>. Ou
+                    pelo{" "}
+                    <a href="/contact" className="text-primary hover:underline">
+                      Formulário de contacto
+                    </a>
+                    , selecionado o assunto &quot;Assuntos Legais&quot;.
                   </p>
                 </div>
 
@@ -396,9 +437,7 @@ export default function PrivacidadePage() {
                       Cookies e Tecnologias Semelhantes
                     </h2>
                   </div>
-                  <p>
-                    Utilizamos cookies e tecnologias semelhantes para:
-                  </p>
+                  <p>Utilizamos cookies e tecnologias semelhantes para:</p>
                   <ul className="pl-6">
                     <li>Manter a sua sessão ativa</li>
                     <li>Lembrar as suas preferências</li>
@@ -407,7 +446,8 @@ export default function PrivacidadePage() {
                     <li>Personalizar o conteúdo</li>
                   </ul>
                   <p className="mt-4">
-                    Pode gerir as suas preferências de cookies através das configurações do seu navegador.
+                    Pode gerir as suas preferências de cookies através das
+                    configurações do seu navegador.
                   </p>
                 </div>
 
@@ -421,12 +461,11 @@ export default function PrivacidadePage() {
                       Retenção de Dados
                     </h2>
                   </div>
-                  <p>
-                    Mantemos os seus dados apenas pelo tempo necessário:
-                  </p>
+                  <p>Mantemos os seus dados apenas pelo tempo necessário:</p>
                   <ul className="pl-6">
-                    <li>Dados de cliente: durante a relação comercial + 5 anos</li>
-                    <li>Dados de faturação: 10 anos (obrigação legal)</li>
+                    <li>
+                      Dados de cliente: durante a relação comercial + 5 anos
+                    </li>
                     <li>Dados de marketing: até retirada do consentimento</li>
                     <li>Histórico de serviços: 2 anos após o último serviço</li>
                   </ul>
@@ -443,12 +482,11 @@ export default function PrivacidadePage() {
                     </h2>
                   </div>
                   <p>
-                    Podemos atualizar esta política periodicamente. Quando o fizermos:
+                    Podemos atualizar esta política periodicamente. Quando o
+                    fizermos:
                   </p>
                   <ul className="pl-6">
                     <li>Publicaremos a versão atualizada no website</li>
-                    <li>Notificaremos por email em caso de alterações significativas</li>
-                    <li>Manteremos um histórico das versões anteriores</li>
                   </ul>
                 </div>
 
@@ -462,22 +500,54 @@ export default function PrivacidadePage() {
                       Contacto
                     </h2>
                   </div>
-                  <p>
-                    Para questões sobre privacidade e proteção de dados:
-                  </p>
+                  <p>Para questões sobre privacidade e proteção de dados:</p>
                   <ul className="pl-6">
-                    <li>Email: <a href="mailto:geral@relusa.pt">geral@relusa.pt</a></li>
-                    <li>Telefone: <a href="tel:+351932440827">932 440 827</a></li>
-                    <li>Morada: Vila Nova de Gaia, Portugal</li>
+                    <li>
+                      Email:{" "}
+                      <a href="mailto:geral@relusa.pt">geral@relusa.pt</a>
+                    </li>
+                    <li>
+                      Telefone: <a href="tel:+351932440827">932 440 827</a>
+                    </li>
+                    <li>
+                      WhatsApp:{" "}
+                      <a
+                        href="https://wa.me/351932440827"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        932 440 827
+                      </a>
+                    </li>
+                    <li>
+                      Formulário de contacto:{" "}
+                      <a
+                        href="/contact"
+                        className="text-primary hover:underline"
+                      >
+                        Formulário de contacto
+                      </a>
+                    </li>
+                    <li>
+                      Instagram:{" "}
+                      <a
+                        href="https://instagram.com/relusa.pt"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        @relusa.pt
+                      </a>
+                    </li>
                   </ul>
                   <p className="mt-4">
-                    Responderemos a todas as solicitações relacionadas com dados pessoais no prazo máximo de 30 dias.
+                    Responderemos a todas as solicitações relacionadas com dados
+                    pessoais no prazo máximo de 5 dias úteis.
                   </p>
                 </div>
 
                 <div className="mt-12 pt-6 border-t border-gray-200 dark:border-gray-700">
                   <p className="text-sm text-gray-600 dark:text-gray-400">
-                    Ao utilizar os nossos serviços, você confirma que leu,
+                    Ao utilizar os nossos serviços, confirma que leu,
                     compreendeu e concorda com esta Política de Privacidade.
                   </p>
                   <p className="text-sm text-gray-600 dark:text-gray-400 mt-4">
