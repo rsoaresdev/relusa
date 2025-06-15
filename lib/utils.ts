@@ -11,7 +11,7 @@ export function cn(...inputs: ClassValue[]) {
  * Gera URL absoluta para o site
  */
 export function getAbsoluteUrl(path: string): string {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://relusa.pt";
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.relusa.pt";
   return `${baseUrl}${path.startsWith("/") ? path : `/${path}`}`;
 }
 
@@ -27,7 +27,7 @@ export function getOgImageUrl({
   description?: string;
   mode?: "light" | "dark";
 }): string {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://relusa.pt";
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.relusa.pt";
   const params = new URLSearchParams();
 
   if (title) params.set("title", title);
@@ -76,7 +76,7 @@ export function generateServiceSchema(service: {
     provider: {
       "@type": "LocalBusiness",
       name: "Relusa",
-      image: "https://relusa.pt/og-image.png",
+      image: "https://www.relusa.pt/og-image.png",
       address: {
         "@type": "PostalAddress",
         addressLocality: "Vila Nova de Gaia",

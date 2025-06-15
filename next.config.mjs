@@ -11,7 +11,7 @@ const getCorsAllowedOrigins = () => {
   }
 
   // Valor padrão para produção
-  return "https://relusa.pt";
+  return "https://www.relusa.pt";
 };
 
 const nextConfig = {
@@ -134,7 +134,7 @@ const nextConfig = {
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "relusa.pt",
+        hostname: "www.relusa.pt",
         pathname: "**",
       },
       {
@@ -157,7 +157,7 @@ const nextConfig = {
         has: [
           {
             type: 'host',
-            value: 'relusa.pt',
+            value: 'www.relusa.pt',
           },
         ],
         destination: '/:path/',

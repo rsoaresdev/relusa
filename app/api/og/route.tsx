@@ -162,7 +162,7 @@ export async function GET(request: NextRequest) {
                   color: accentColor,
                 }}
               >
-                relusa.pt
+                www.relusa.pt
               </div>
             </div>
           </div>

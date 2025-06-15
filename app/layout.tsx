@@ -35,7 +35,7 @@ export const metadata: Metadata = {
     address: false,
     telephone: false,
   },
-  metadataBase: new URL("https://relusa.pt"),
+  metadataBase: new URL("https://www.relusa.pt"),
   alternates: {
     canonical: "/",
   },
@@ -53,13 +53,13 @@ export const metadata: Metadata = {
     title: "Relusa - Lavagem automóvel a seco",
     description:
       "Damos mais brilho a Gaia! Serviço premium de lavagem automóvel a seco em Vila Nova de Gaia. Relusa — o seu carro não recusa.",
-    url: "https://relusa.pt",
+    url: "https://www.relusa.pt",
     siteName: "Relusa",
     locale: "pt_PT",
     type: "website",
     images: [
       {
-        url: "https://relusa.pt/og-image.png",
+        url: "https://www.relusa.pt/og-image.png",
         width: 1200,
         height: 630,
         alt: "Relusa - Lavagem automóvel a seco",
@@ -71,7 +71,7 @@ export const metadata: Metadata = {
     title: "Relusa - Lavagem automóvel a seco",
     description:
       "Damos mais brilho a Gaia! Serviço premium de lavagem automóvel a seco em Vila Nova de Gaia. Relusa — o seu carro não recusa.",
-    images: ["https://relusa.pt/og-image.png"],
+    images: ["https://www.relusa.pt/og-image.png"],
   },
 };
 
@@ -114,8 +114,8 @@ export default function RootLayout({
               name: "Relusa",
               description:
                 "Lavagens automóvel a seco em Vila Nova de Gaia. Interior, exterior, jantes e vidros com detalhe profissional.",
-              image: "https://relusa.pt/og-image.png",
-              url: "https://relusa.pt",
+                    image: "https://www.relusa.pt/og-image.png",
+      url: "https://www.relusa.pt",
               telephone: "+351932440827",
               email: "geral@relusa.pt",
               address: {

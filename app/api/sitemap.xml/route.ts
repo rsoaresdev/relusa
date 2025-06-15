@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 
 export async function GET() {
   // URLs estáticas
-  const baseUrl = 'https://relusa.pt';
+  const baseUrl = 'https://www.relusa.pt';
   const staticPages = [
     {
       url: baseUrl,

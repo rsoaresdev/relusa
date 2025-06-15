@@ -6,37 +6,37 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // URLs estáticas
   const staticRoutes = [
     {
-      url: 'https://relusa.pt',
+      url: 'https://www.relusa.pt',
       lastModified: new Date(),
       changeFrequency: 'daily' as ChangeFrequency,
       priority: 1.0,
     },
     {
-      url: 'https://relusa.pt/sobre',
+      url: 'https://www.relusa.pt/sobre',
       lastModified: new Date(),
       changeFrequency: 'monthly' as ChangeFrequency,
       priority: 0.8,
     },
     {
-      url: 'https://relusa.pt/contactos',
+      url: 'https://www.relusa.pt/contactos',
       lastModified: new Date(),
       changeFrequency: 'monthly' as ChangeFrequency,
       priority: 0.8,
     },
     {
-      url: 'https://relusa.pt/termos',
+      url: 'https://www.relusa.pt/termos',
       lastModified: new Date(),
       changeFrequency: 'yearly' as ChangeFrequency,
       priority: 0.5,
     },
     {
-      url: 'https://relusa.pt/privacidade',
+      url: 'https://www.relusa.pt/privacidade',
       lastModified: new Date(),
       changeFrequency: 'yearly' as ChangeFrequency,
       priority: 0.5,
     },
     {
-      url: 'https://relusa.pt/marcacoes',
+      url: 'https://www.relusa.pt/marcacoes',
       lastModified: new Date(),
       changeFrequency: 'daily' as ChangeFrequency,
       priority: 0.9,

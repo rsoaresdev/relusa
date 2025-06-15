@@ -3,7 +3,7 @@ User-agent: *
 Allow: /
 
 # Sitemap
-Sitemap: https://relusa.pt/sitemap.xml
+Sitemap: https://www.relusa.pt/sitemap.xml
 
 # Disallow admin areas
 Disallow: /admin/

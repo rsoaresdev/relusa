@@ -214,14 +214,14 @@ const baseLayout = (content: string, title: string) => `
       <div class="wrapper">
         <div class="container">
           <div class="header">
-            <img src="https://relusa.pt/logo_rounded.png" alt="Relusa" class="logo">
+            <img src="https://www.relusa.pt/logo_rounded.png" alt="Relusa" class="logo">
           </div>
           <div class="content">
             ${content}
           </div>
           <div class="footer">
             <div class="social-links">
-              <a href="https://relusa.pt" target="_blank">Website</a>
+              <a href="https://www.relusa.pt" target="_blank">Website</a>
               <a href="https://instagram.com/relusa.pt" target="_blank">Instagram</a>
               <a href="https://wa.me/351932440827" target="_blank">WhatsApp</a>
             </div>
@@ -284,7 +284,7 @@ export const welcomeEmailTemplate = (user: User) => {
     
     <div style="text-align: center; margin: 30px 0;">
       <p style="margin-bottom: 20px;">Pronto para experimentar? Agende sua primeira lavagem!</p>
-      <a href="https://relusa.pt/marcacoes" class="button">Agendar Lavagem</a>
+      <a href="https://www.relusa.pt/marcacoes" class="button">Agendar Lavagem</a>
     </div>
     
     <div style="background-color: #f8fafc; border-radius: 8px; padding: 16px; margin-top: 20px;">
@@ -379,7 +379,7 @@ export const bookingRequestEmailTemplate = (
     <p>O seu pedido está em análise. Iremos confirmar a disponibilidade para o horário solicitado o mais brevemente possível.</p>
     
     <div style="text-align: center; margin: 30px 0;">
-      <a href="https://relusa.pt/marcacoes" class="button">Ver Minhas Marcações</a>
+      <a href="https://www.relusa.pt/marcacoes" class="button">Ver Minhas Marcações</a>
     </div>
     
     <div style="background-color: #f8fafc; border-radius: 8px; padding: 16px; margin-top: 20px;">
@@ -496,7 +496,7 @@ export const bookingApprovedEmailTemplate = (
     </div>
     
     <div style="text-align: center; margin: 30px 0;">
-      <a href="https://relusa.pt/marcacoes" class="button">Ver Minhas Marcações</a>
+      <a href="https://www.relusa.pt/marcacoes" class="button">Ver Minhas Marcações</a>
     </div>
     
     <div style="background-color: #f8fafc; border-radius: 8px; padding: 16px; margin-top: 20px;">
@@ -553,7 +553,7 @@ export const bookingRejectedEmailTemplate = (
     <p>Convidamos você a fazer uma nova marcação para uma data alternativa.</p>
     
     <div style="text-align: center; margin: 30px 0;">
-      <a href="https://relusa.pt/marcacoes" class="button">Fazer Nova Marcação</a>
+      <a href="https://www.relusa.pt/marcacoes" class="button">Fazer Nova Marcação</a>
     </div>
     
     <p>Pedimos desculpa pelo inconveniente. Se tiver alguma dúvida, não hesite em contactar-nos através do email <a href="mailto:geral@relusa.pt" style="color: ${
@@ -604,7 +604,7 @@ export const serviceStartedEmailTemplate = (
     <p>O nosso técnico está agora a realizar o serviço solicitado. Você receberá uma notificação assim que o serviço estiver concluído.</p>
     
     <div style="text-align: center; margin: 30px 0;">
-      <a href="https://relusa.pt/marcacoes" class="button">Ver Detalhes</a>
+      <a href="https://www.relusa.pt/marcacoes" class="button">Ver Detalhes</a>
     </div>
     
     <p>Se tiver alguma dúvida ou necessitar de assistência adicional, não hesite em contactar-nos através do email <a href="mailto:geral@relusa.pt" style="color: ${
@@ -707,7 +707,7 @@ export const serviceCompletedEmailTemplate = (
     
     <div style="text-align: center; margin: 30px 0;">
       <p style="margin-bottom: 20px;">Gostou do nosso serviço? Agende sua próxima lavagem!</p>
-      <a href="https://relusa.pt/marcacoes" class="button">Agendar Nova Lavagem</a>
+      <a href="https://www.relusa.pt/marcacoes" class="button">Agendar Nova Lavagem</a>
     </div>
     
     <div style="background-color: #f8fafc; border-radius: 8px; padding: 16px; margin-top: 20px;">
@@ -805,7 +805,7 @@ export const loyaltyReminderEmailTemplate = (
     
     <div style="text-align: center; margin: 30px 0;">
       <p style="margin-bottom: 20px;">Não perca esta oportunidade! Agende sua próxima lavagem agora.</p>
-      <a href="https://relusa.pt/marcacoes" class="button">Agendar Lavagem</a>
+      <a href="https://www.relusa.pt/marcacoes" class="button">Agendar Lavagem</a>
     </div>
     
     <div style="background-color: #f8fafc; border-radius: 8px; padding: 16px; margin-top: 20px;">
@@ -888,7 +888,7 @@ export const loyaltyDiscountEmailTemplate = (user: User) => {
     
     <div style="text-align: center; margin: 30px 0;">
       <p style="margin-bottom: 20px;">Aproveite agora o seu desconto!</p>
-      <a href="https://relusa.pt/marcacoes" class="button">Agendar com Desconto</a>
+      <a href="https://www.relusa.pt/marcacoes" class="button">Agendar com Desconto</a>
     </div>
     
     <div style="background-color: #f8fafc; border-radius: 8px; padding: 16px; margin-top: 20px;">
@@ -1121,7 +1121,7 @@ export const adminNewBookingNotificationTemplate = (
     </div>
     
     <div style="text-align: center; margin: 30px 0;">
-      <a href="https://relusa.pt/admin" class="button">Gerir Marcações</a>
+      <a href="https://www.relusa.pt/admin" class="button">Gerir Marcações</a>
     </div>
     
     <div style="background-color: #f8fafc; border-radius: 8px; padding: 16px; margin-top: 20px;">
@@ -1271,7 +1271,7 @@ export const adminBookingCancelledNotificationTemplate = (
     </div>
     
     <div style="text-align: center; margin: 30px 0;">
-      <a href="https://relusa.pt/admin" class="button">Ver Painel de Administração</a>
+      <a href="https://www.relusa.pt/admin" class="button">Ver Painel de Administração</a>
     </div>
     
     <div style="background-color: #f8fafc; border-radius: 8px; padding: 16px; margin-top: 20px;">
