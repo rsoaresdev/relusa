@@ -84,7 +84,7 @@ const formatTimestamp = (timestamp: string | null | undefined) => {
   try {
     const date = parseISO(timestamp);
     return format(date, "d 'de' MMMM, HH:mm", { locale: pt });
-  } catch  {
+  } catch {
     return "Data inválida";
   }
 };
@@ -916,70 +916,50 @@ export interface ContactFormData {
 
 export const contactFormEmailTemplate = (data: ContactFormData) => {
   const content = `
-    <div style="text-align: center; margin-bottom: 30px;">
-      <div style="background-color: ${
-        styles.primaryColor
-      }; display: inline-block; border-radius: 50%; width: 80px; height: 80px; margin-bottom: 20px;">
-        <div style="color: white; font-size: 40px; line-height: 80px;">✉️</div>
-      </div>
-      <h2 style="color: ${
-        styles.primaryColor
-      }; margin: 0;">Nova Mensagem de Contacto</h2>
-    </div>
-
-    <p>Recebeu uma nova mensagem através do formulário de contacto do website:</p>
+    <h2>Nova Mensagem de Contacto</h2>
+    <p>Recebeu uma nova mensagem através do formulário de contacto do website.</p>
     
-    <div style="background-color: ${
-      styles.secondaryColor
-    }; border-radius: 8px; padding: 20px; margin: 20px 0;">
-      <table style="width: 100%;">
+    <div class="info-box">
+      <h3 style="margin-top: 0;">Detalhes da Mensagem</h3>
+      <table>
         <tr>
-          <td style="padding: 8px 0; vertical-align: top; width: 120px; color: #64748b;">Nome:</td>
-          <td style="padding: 8px 0; vertical-align: top;"><strong>${
-            data.name
-          }</strong></td>
+          <td><strong>Nome:</strong></td>
+          <td>${data.name}</td>
         </tr>
         <tr>
-          <td style="padding: 8px 0; vertical-align: top; width: 120px; color: #64748b;">Email:</td>
-          <td style="padding: 8px 0; vertical-align: top;"><a href="mailto:${
-            data.email
-          }" style="color: ${styles.primaryColor};">${data.email}</a></td>
+          <td><strong>Email:</strong></td>
+          <td><a href="mailto:${data.email}" style="color: ${
+    styles.primaryColor
+  };">${data.email}</a></td>
         </tr>
-        ${
-          data.phone
-            ? `
         <tr>
-          <td style="padding: 8px 0; vertical-align: top; width: 120px; color: #64748b;">Telemóvel:</td>
-          <td style="padding: 8px 0; vertical-align: top;">${data.phone}</td>
+          <td><strong>Telefone:</strong></td>
+          <td>${data.phone || "Não fornecido"}</td>
         </tr>
-        `
-            : ""
-        }
         <tr>
-          <td style="padding: 8px 0; vertical-align: top; width: 120px; color: #64748b;">Assunto:</td>
-          <td style="padding: 8px 0; vertical-align: top;"><strong>${getSubjectLabel(
-            data.subject
-          )}</strong></td>
+          <td><strong>Assunto:</strong></td>
+          <td>${getSubjectLabel(data.subject)}</td>
         </tr>
       </table>
     </div>
     
-    <div style="background-color: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px; margin: 20px 0;">
-      <h3 style="margin-top: 0; color: ${styles.primaryColor};">Mensagem:</h3>
-      <p style="white-space: pre-wrap;">${data.message}</p>
+    <div style="background-color: #f8fafc; border-radius: 8px; padding: 20px; margin: 20px 0;">
+      <h4 style="margin-top: 0; color: ${styles.primaryColor};">Mensagem:</h4>
+      <p style="margin: 0; white-space: pre-wrap;">${data.message}</p>
     </div>
     
+    <p>Para responder, pode usar o botão abaixo ou responder diretamente a este email.</p>
+    
     <div style="text-align: center; margin: 30px 0;">
-      <p style="margin-bottom: 20px;">Responda diretamente a este email para contactar o cliente.</p>
-      <a href="mailto:${data.email}" class="button">Responder ao Cliente</a>
+      <a href="mailto:${data.email}?subject=Re: ${encodeURIComponent(
+    getSubjectLabel(data.subject)
+  )}" class="button">Responder</a>
     </div>
   `;
 
   return {
-    subject: `Nova Mensagem de Contacto: ${data.name} - ${getSubjectLabel(
-      data.subject
-    )}`,
-    html: baseLayout(content, "Formulário de Contacto - Relusa"),
+    subject: `Nova Mensagem de Contacto: ${getSubjectLabel(data.subject)}`,
+    html: baseLayout(content, "Nova Mensagem de Contacto - Relusa"),
   };
 };
 
@@ -998,4 +978,314 @@ const getSubjectLabel = (subjectValue: string): string => {
   };
 
   return subjects[subjectValue] || subjectValue;
+};
+
+// Template de notificação para administrador - Novo pedido de marcação
+export const adminNewBookingNotificationTemplate = (
+  booking: Booking,
+  userName: string,
+  userEmail: string
+) => {
+  const content = `
+    <div style="text-align: center; margin-bottom: 30px;">
+      <div style="background-color: ${
+        styles.primaryColor
+      }; display: inline-block; border-radius: 50%; width: 80px; height: 80px; margin-bottom: 20px;">
+        <div style="color: white; font-size: 40px; line-height: 80px;">📋</div>
+      </div>
+      <h2 style="color: ${
+        styles.primaryColor
+      }; margin: 0;">Novo Pedido de Marcação</h2>
+    </div>
+
+    <p>Foi recebido um novo pedido de marcação na plataforma Relusa.</p>
+    
+    <div class="info-box">
+      <h3 style="margin-top: 0;">Detalhes do Cliente</h3>
+      <table>
+        <tr>
+          <td><strong>Nome</strong></td>
+          <td>
+            <div style="display: flex; align-items: center;">
+              <span style="margin-right: 8px;">👤</span>
+              ${userName}
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td><strong>Email</strong></td>
+          <td>
+            <div style="display: flex; align-items: center;">
+              <span style="margin-right: 8px;">📧</span>
+              <a href="mailto:${userEmail}" style="color: ${
+    styles.primaryColor
+  };">${userEmail}</a>
+            </div>
+          </td>
+        </tr>
+      </table>
+    </div>
+    
+    <div class="info-box">
+      <h3 style="margin-top: 0;">Detalhes da Marcação</h3>
+      <table>
+        <tr>
+          <td><strong>Serviço</strong></td>
+          <td>
+            <div style="display: flex; align-items: center;">
+              <span style="margin-right: 8px;">🚗</span>
+              ${getServiceType(booking.service_type)}
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td><strong>Data</strong></td>
+          <td>
+            <div style="display: flex; align-items: center;">
+              <span style="margin-right: 8px;">📅</span>
+              ${formatDate(booking.date)}
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td><strong>Horário</strong></td>
+          <td>
+            <div style="display: flex; align-items: center;">
+              <span style="margin-right: 8px;">⏰</span>
+              ${getTimeSlot(booking.time_slot, booking.custom_time)}
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td><strong>Veículo</strong></td>
+          <td>
+            <div style="display: flex; align-items: center;">
+              <span style="margin-right: 8px;">🚘</span>
+              ${booking.car_model} (${booking.car_plate})
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td><strong>Morada</strong></td>
+          <td>
+            <div style="display: flex; align-items: center;">
+              <span style="margin-right: 8px;">📍</span>
+              ${booking.address}
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td><strong>Preço</strong></td>
+          <td>
+            <div style="display: flex; align-items: center;">
+              <span style="margin-right: 8px;">💰</span>
+              <strong>${getPrice(
+                booking.service_type,
+                booking.has_discount || false
+              )}</strong>
+              ${
+                booking.has_discount
+                  ? ' <span style="color: ' +
+                    styles.accentColor +
+                    '; font-size: 12px;">(Com desconto de fidelidade)</span>'
+                  : ""
+              }
+            </div>
+          </td>
+        </tr>
+        ${
+          booking.notes
+            ? `
+        <tr>
+          <td><strong>Notas</strong></td>
+          <td>
+            <div style="display: flex; align-items: start;">
+              <span style="margin-right: 8px; margin-top: 2px;">📝</span>
+              <span style="font-style: italic;">"${booking.notes}"</span>
+            </div>
+          </td>
+        </tr>
+        `
+            : ""
+        }
+      </table>
+    </div>
+    
+    <div style="background-color: #fef3c7; border-radius: 8px; padding: 16px; margin: 20px 0; border-left: 4px solid ${
+      styles.warningColor
+    };">
+      <p style="margin: 0; font-size: 14px;">
+        <strong>⚠️ Ação Necessária:</strong><br>
+        Este pedido está pendente de aprovação. Aceda ao painel de administração para aprovar ou rejeitar a marcação.
+      </p>
+    </div>
+    
+    <div style="text-align: center; margin: 30px 0;">
+      <a href="https://relusa.pt/admin" class="button">Gerir Marcações</a>
+    </div>
+    
+    <div style="background-color: #f8fafc; border-radius: 8px; padding: 16px; margin-top: 20px;">
+      <p style="margin: 0; font-size: 14px;">
+        <strong>ID da Marcação:</strong> ${booking.id}<br>
+        <strong>Data de Criação:</strong> ${formatTimestamp(booking.created_at)}
+      </p>
+    </div>
+  `;
+
+  return {
+    subject: `🔔 Novo Pedido de Marcação - ${userName}`,
+    html: baseLayout(content, "Novo Pedido de Marcação - Relusa Admin"),
+  };
+};
+
+// Template de notificação para administrador - Cancelamento de marcação
+export const adminBookingCancelledNotificationTemplate = (
+  booking: Booking,
+  userName: string,
+  userEmail: string
+) => {
+  const content = `
+    <div style="text-align: center; margin-bottom: 30px;">
+      <div style="background-color: ${
+        styles.dangerColor
+      }; display: inline-block; border-radius: 50%; width: 80px; height: 80px; margin-bottom: 20px;">
+        <div style="color: white; font-size: 40px; line-height: 80px;">❌</div>
+      </div>
+      <h2 style="color: ${
+        styles.dangerColor
+      }; margin: 0;">Marcação Cancelada</h2>
+    </div>
+
+    <p>Uma marcação foi cancelada pelo cliente na plataforma Relusa.</p>
+    
+    <div class="info-box">
+      <h3 style="margin-top: 0;">Detalhes do Cliente</h3>
+      <table>
+        <tr>
+          <td><strong>Nome</strong></td>
+          <td>
+            <div style="display: flex; align-items: center;">
+              <span style="margin-right: 8px;">👤</span>
+              ${userName}
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td><strong>Email</strong></td>
+          <td>
+            <div style="display: flex; align-items: center;">
+              <span style="margin-right: 8px;">📧</span>
+              <a href="mailto:${userEmail}" style="color: ${
+    styles.primaryColor
+  };">${userEmail}</a>
+            </div>
+          </td>
+        </tr>
+      </table>
+    </div>
+    
+    <div class="info-box">
+      <h3 style="margin-top: 0;">Detalhes da Marcação Cancelada</h3>
+      <table>
+        <tr>
+          <td><strong>Serviço</strong></td>
+          <td>
+            <div style="display: flex; align-items: center;">
+              <span style="margin-right: 8px;">🚗</span>
+              ${getServiceType(booking.service_type)}
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td><strong>Data</strong></td>
+          <td>
+            <div style="display: flex; align-items: center;">
+              <span style="margin-right: 8px;">📅</span>
+              ${formatDate(booking.date)}
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td><strong>Horário</strong></td>
+          <td>
+            <div style="display: flex; align-items: center;">
+              <span style="margin-right: 8px;">⏰</span>
+              ${getTimeSlot(booking.time_slot, booking.custom_time)}
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td><strong>Veículo</strong></td>
+          <td>
+            <div style="display: flex; align-items: center;">
+              <span style="margin-right: 8px;">🚘</span>
+              ${booking.car_model} (${booking.car_plate})
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td><strong>Morada</strong></td>
+          <td>
+            <div style="display: flex; align-items: center;">
+              <span style="margin-right: 8px;">📍</span>
+              ${booking.address}
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td><strong>Status</strong></td>
+          <td>
+            <div style="display: flex; align-items: center;">
+              <span style="margin-right: 8px;">📊</span>
+              <span style="color: ${
+                styles.dangerColor
+              }; font-weight: 600;">Cancelada pelo cliente</span>
+            </div>
+          </td>
+        </tr>
+        ${
+          booking.notes
+            ? `
+        <tr>
+          <td><strong>Notas</strong></td>
+          <td>
+            <div style="display: flex; align-items: start;">
+              <span style="margin-right: 8px; margin-top: 2px;">📝</span>
+              <span style="font-style: italic;">"${booking.notes}"</span>
+            </div>
+          </td>
+        </tr>
+        `
+            : ""
+        }
+      </table>
+    </div>
+    
+    <div style="background-color: #fee2e2; border-radius: 8px; padding: 16px; margin: 20px 0; border-left: 4px solid ${
+      styles.dangerColor
+    };">
+      <p style="margin: 0; font-size: 14px;">
+        <strong>ℹ️ Informação:</strong><br>
+        Esta marcação foi cancelada pelo cliente e foi automaticamente removida do sistema. Não é necessária nenhuma ação adicional.
+      </p>
+    </div>
+    
+    <div style="text-align: center; margin: 30px 0;">
+      <a href="https://relusa.pt/admin" class="button">Ver Painel de Administração</a>
+    </div>
+    
+    <div style="background-color: #f8fafc; border-radius: 8px; padding: 16px; margin-top: 20px;">
+      <p style="margin: 0; font-size: 14px;">
+        <strong>ID da Marcação:</strong> ${booking.id}<br>
+        <strong>Data de Cancelamento:</strong> ${formatTimestamp(
+          new Date().toISOString()
+        )}
+      </p>
+    </div>
+  `;
+
+  return {
+    subject: `🚫 Marcação Cancelada - ${userName}`,
+    html: baseLayout(content, "Marcação Cancelada - Relusa Admin"),
+  };
 };

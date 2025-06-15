@@ -9,6 +9,8 @@ import {
   serviceCompletedEmailTemplate,
   loyaltyReminderEmailTemplate,
   contactFormEmailTemplate,
+  adminNewBookingNotificationTemplate,
+  adminBookingCancelledNotificationTemplate,
   ContactFormData,
 } from "./templates";
 import { User, Booking, LoyaltyPoints } from "@/lib/supabase/config";
@@ -77,7 +79,7 @@ export const sendWelcomeEmail = async (user: User) => {
   try {
     // Verificar se temos todos os dados necessários do utilizador
     if (!user || !user.email || !user.name) return false;
-    
+
     const { subject, html } = welcomeEmailTemplate(user);
     return await sendEmail(user.email, subject, html);
   } catch {
@@ -135,7 +137,7 @@ export const sendLoyaltyReminderEmail = async (userId: string) => {
   if (!userId) return false;
 
   const user = await getUserData(userId);
-  if (!user)  return false;
+  if (!user) return false;
 
   const loyaltyPoints = await getLoyaltyPoints(userId);
   if (!loyaltyPoints) return false;
@@ -160,6 +162,65 @@ export const sendContactFormEmail = async (data: ContactFormData) => {
 
     // Enviar para o email da empresa com resposta para o email do cliente
     return await sendEmail("geral@relusa.pt", subject, html, data.email);
+  } catch {
+    return false;
+  }
+};
+
+// Enviar notificação para administrador sobre novo pedido de marcação
+export const sendAdminNewBookingNotification = async (booking: Booking) => {
+  try {
+    const user = await getUserData(booking.user_id);
+    if (!user) return false;
+
+    const { subject, html } = adminNewBookingNotificationTemplate(
+      booking,
+      user.name,
+      user.email
+    );
+
+    // Enviar para o email administrativo
+    return await sendEmail("geral@relusa.pt", subject, html);
+  } catch {
+    return false;
+  }
+};
+
+// Enviar notificação para administrador sobre cancelamento de marcação
+export const sendAdminBookingCancelledNotification = async (
+  booking: Booking
+) => {
+  try {
+    const user = await getUserData(booking.user_id);
+    if (!user) return false;
+
+    const { subject, html } = adminBookingCancelledNotificationTemplate(
+      booking,
+      user.name,
+      user.email
+    );
+
+    // Enviar para o email administrativo
+    return await sendEmail("geral@relusa.pt", subject, html);
+  } catch {
+    return false;
+  }
+};
+
+// Função para enviar emails do sistema (sem autenticação de utilizador)
+export const sendSystemEmail = async (type: string, data: any) => {
+  try {
+    const response = await fetch("/api/email", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-system-key": process.env.SYSTEM_API_KEY!,
+      },
+      body: JSON.stringify({ type, data }),
+    });
+
+    const result = await response.json();
+    return response.ok && result.success;
   } catch {
     return false;
   }

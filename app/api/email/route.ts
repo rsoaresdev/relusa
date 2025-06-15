@@ -8,6 +8,8 @@ import {
   sendServiceCompletedEmail,
   sendLoyaltyReminderEmail,
   sendContactFormEmail,
+  sendAdminNewBookingNotification,
+  sendAdminBookingCancelledNotification,
 } from "@/lib/email/service";
 import { verifyEmailConnection } from "@/lib/email/config";
 import { supabase } from "@/lib/supabase/config";
@@ -138,6 +140,12 @@ export async function POST(request: Request) {
         }
 
         result = await sendContactFormEmail(data);
+        break;
+      case "admin_new_booking":
+        result = await sendAdminNewBookingNotification(data);
+        break;
+      case "admin_booking_cancelled":
+        result = await sendAdminBookingCancelledNotification(data);
         break;
       default:
         return NextResponse.json(

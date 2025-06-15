@@ -4,12 +4,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase/config";
 import { toast } from "sonner";
-import {
-  Calendar as CalendarIcon,
-  Car,
-  MapPin,
-  ArrowLeft,
-} from "lucide-react";
+import { Calendar as CalendarIcon, Car, MapPin, ArrowLeft } from "lucide-react";
 import { format } from "date-fns";
 import { pt } from "date-fns/locale";
 import { Calendar } from "@/components/ui/calendar";
@@ -265,7 +260,25 @@ export default function BookingForm({ session, onCancel }: BookingFormProps) {
 
       if (data && data.length > 0) {
         const booking = data[0];
+        // Enviar email de confirmação ao cliente
         await emailService.sendBookingRequestEmail(booking);
+
+        // Enviar notificação ao administrador (usando fetch direto para evitar problemas de autenticação)
+        try {
+          await fetch("/api/email", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "x-system-key": process.env.NEXT_PUBLIC_SYSTEM_API_KEY!,
+            },
+            body: JSON.stringify({
+              type: "admin_new_booking",
+              data: booking,
+            }),
+          });
+        } catch (error) {
+          console.error("Erro ao enviar notificação ao administrador:", error);
+        }
       }
 
       toast.success(

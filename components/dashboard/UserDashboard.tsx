@@ -139,6 +139,23 @@ export default function UserDashboard({
         return;
       }
 
+      // Enviar notificação ao administrador antes de cancelar
+      try {
+        await fetch("/api/email", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-system-key": process.env.NEXT_PUBLIC_SYSTEM_API_KEY!,
+          },
+          body: JSON.stringify({
+            type: "admin_booking_cancelled",
+            data: bookingToCancel,
+          }),
+        });
+      } catch (error) {
+        console.error("Erro ao enviar notificação ao administrador:", error);
+      }
+
       const { error } = await supabase
         .from("bookings")
         .delete()
@@ -191,7 +208,6 @@ export default function UserDashboard({
             </div>
           </div>
           <div className="mt-4 md:mt-0 flex flex-col sm:flex-row gap-2">
-
             <Button
               variant="secondary"
               size="sm"
