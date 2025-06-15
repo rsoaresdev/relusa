@@ -10,7 +10,7 @@ import {
   Phone,
   UserRoundPen,
 } from "lucide-react";
-import BookingAuthWrapper from "@/components/auth/BookingAuthWrapper";
+import BookingAuthWrapperSuspense from "@/components/auth/BookingAuthWrapperSuspense";
 
 export const metadata = {
   title: "Marcações | Relusa - O seu carro não recusa",
@@ -99,7 +99,7 @@ export default function MarcacoesPage() {
                 </p>
 
                 {/* Componente de autenticação e formulário de marcação */}
-                <BookingAuthWrapper />
+                <BookingAuthWrapperSuspense />
 
                 <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
                   <div className="text-center">
