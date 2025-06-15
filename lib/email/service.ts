@@ -5,6 +5,7 @@ import {
   bookingRequestEmailTemplate,
   bookingApprovedEmailTemplate,
   bookingRejectedEmailTemplate,
+  bookingRescheduledEmailTemplate,
   serviceStartedEmailTemplate,
   serviceCompletedEmailTemplate,
   loyaltyReminderEmailTemplate,
@@ -111,6 +112,26 @@ export const sendBookingRejectedEmail = async (booking: Booking) => {
   if (!user) return false;
 
   const { subject, html } = bookingRejectedEmailTemplate(booking, user.name);
+  return await sendEmail(user.email, subject, html);
+};
+
+// Enviar email de reagendamento de marcação
+export const sendBookingRescheduledEmail = async (
+  booking: Booking,
+  oldDate: string,
+  oldTimeSlot: string,
+  oldCustomTime?: string
+) => {
+  const user = await getUserData(booking.user_id);
+  if (!user) return false;
+
+  const { subject, html } = bookingRescheduledEmailTemplate(
+    booking,
+    user.name,
+    oldDate,
+    oldTimeSlot,
+    oldCustomTime
+  );
   return await sendEmail(user.email, subject, html);
 };
 

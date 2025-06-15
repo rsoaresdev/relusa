@@ -294,6 +294,76 @@ export default function AdminDashboard({
     }
   };
 
+  // Função para reagendar uma marcação
+  const handleRescheduleBooking = async (
+    bookingId: string,
+    newDate: string,
+    newTimeSlot: string,
+    oldDate: string,
+    oldTimeSlot: string,
+    newCustomTime?: string,
+    oldCustomTime?: string
+  ) => {
+    if (isUpdatingRef.current) {
+      toast.error("Já existe uma operação em andamento. Aguarde um momento.");
+      return false;
+    }
+
+    isUpdatingRef.current = true;
+
+    try {
+      // Preparar dados para atualização
+      const updateData: any = {
+        date: newDate,
+        time_slot: newTimeSlot,
+        custom_time: newCustomTime || null,
+      };
+
+      // Atualizar no Supabase
+      const { data, error } = await supabase
+        .from("bookings")
+        .update(updateData)
+        .eq("id", bookingId)
+        .select();
+
+      if (error) {
+        throw error;
+      }
+
+      if (!data || data.length === 0) {
+        throw new Error("Marcação não encontrada");
+      }
+
+      const updatedBooking = data[0] as Booking;
+
+      // Atualizar estado local
+      setBookings((prevBookings) =>
+        prevBookings.map((booking) =>
+          booking.id === bookingId ? { ...booking, ...updateData } : booking
+        )
+      );
+
+      // Enviar email de reagendamento ao cliente
+      await emailService.sendBookingRescheduledEmail(
+        updatedBooking,
+        oldDate,
+        oldTimeSlot,
+        oldCustomTime
+      );
+
+      toast.success(
+        "Marcação reagendada com sucesso! Cliente foi notificado por email."
+      );
+
+      return true;
+    } catch (error: any) {
+      toast.error(error.message || "Erro ao reagendar marcação");
+      return false;
+    } finally {
+      isUpdatingRef.current = false;
+    }
+  };
+
   // Calcular estatísticas para o dashboard
   const pendingCount = bookings.filter((b) => b.status === "pending").length;
   const todayCount = bookings.filter((b) => {
@@ -519,6 +589,7 @@ export default function AdminDashboard({
                   key={booking.id}
                   booking={booking}
                   onStatusChange={handleUpdateBookingStatus}
+                  onReschedule={handleRescheduleBooking}
                 />
               ))}
             </div>

@@ -17,6 +17,7 @@ import {
   Play,
   CheckSquare,
   User,
+  CalendarClock,
 } from "lucide-react";
 import {
   Select,
@@ -31,6 +32,7 @@ import {
   CardFooter,
   CardHeader,
 } from "@/components/ui/card";
+import RescheduleDialog from "./RescheduleDialog";
 
 interface AdminBookingCardProps {
   booking: Booking & {
@@ -43,17 +45,28 @@ interface AdminBookingCardProps {
     startTime?: Date,
     endTime?: Date
   ) => Promise<boolean>;
+  onReschedule?: (
+    bookingId: string,
+    newDate: string,
+    newTimeSlot: string,
+    oldDate: string,
+    oldTimeSlot: string,
+    newCustomTime?: string,
+    oldCustomTime?: string
+  ) => Promise<boolean>;
 }
 
 export default function AdminBookingCard({
   booking,
   onStatusChange,
+  onReschedule,
 }: AdminBookingCardProps) {
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState<
     "completed" | "pending" | "approved" | "rejected" | "started"
   >(booking.status);
   const [currentBooking, setCurrentBooking] = useState(booking);
+  const [rescheduleDialogOpen, setRescheduleDialogOpen] = useState(false);
 
   // Função para formatar a data
   const formatDate = (dateString: string) => {
@@ -221,6 +234,42 @@ export default function AdminBookingCard({
     } finally {
       setLoading(false);
     }
+  };
+
+  // Função para lidar com reagendamento
+  const handleReschedule = async (
+    bookingId: string,
+    newDate: string,
+    newTimeSlot: string,
+    newCustomTime?: string
+  ) => {
+    if (!onReschedule) return false;
+
+    const oldDate = currentBooking.date;
+    const oldTimeSlot = currentBooking.time_slot;
+    const oldCustomTime = currentBooking.custom_time;
+
+    const success = await onReschedule(
+      bookingId,
+      newDate,
+      newTimeSlot,
+      oldDate,
+      oldTimeSlot,
+      newCustomTime,
+      oldCustomTime
+    );
+
+    if (success) {
+      // Atualizar o estado local
+      setCurrentBooking({
+        ...currentBooking,
+        date: newDate,
+        time_slot: newTimeSlot as any,
+        custom_time: newCustomTime,
+      });
+    }
+
+    return success;
   };
 
   // Função para renderizar os botões de ação baseados no status atual
@@ -397,19 +446,15 @@ export default function AdminBookingCard({
       </CardContent>
 
       {/* Controlos de status */}
-      <CardFooter className="bg-gray-50 dark:bg-gray-800/50 p-6 border-t border-gray-200 dark:border-gray-700">
-        {/* Botões de ação rápida baseados no status atual */}
-        {renderActionButtons()}
-
-        {/* Seletor de status manual (apenas mostrado quando não há ações específicas) */}
-        {(currentBooking.status === "completed" ||
-          currentBooking.status === "rejected") && (
-          <div className="flex flex-col md:flex-row gap-4 items-center w-full">
-            <div className="w-full md:w-2/3">
+      <CardFooter className="p-6 pt-0">
+        <div className="flex flex-col w-full gap-4">
+          {/* Status controls */}
+          <div className="flex flex-col sm:flex-row gap-3">
+            <div className="flex-1">
               <Select
                 value={status}
                 onValueChange={(value) =>
-                  setStatus(
+                  handleStatusChange(
                     value as
                       | "completed"
                       | "pending"
@@ -420,33 +465,80 @@ export default function AdminBookingCard({
                 }
                 disabled={loading}
               >
-                <SelectTrigger className="bg-white dark:bg-gray-800">
-                  <SelectValue placeholder="Alterar status" />
+                <SelectTrigger className="w-full">
+                  <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="pending">Pendente</SelectItem>
-                  <SelectItem value="approved">Aprovada</SelectItem>
-                  <SelectItem value="rejected">Rejeitada</SelectItem>
-                  <SelectItem value="started">Em andamento</SelectItem>
-                  <SelectItem value="completed">Concluída</SelectItem>
+                  <SelectItem value="pending">
+                    <div className="flex items-center">
+                      <AlertCircle size={16} className="mr-2 text-yellow-600" />
+                      Pendente
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="approved">
+                    <div className="flex items-center">
+                      <CheckCircle size={16} className="mr-2 text-blue-600" />
+                      Aprovada
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="rejected">
+                    <div className="flex items-center">
+                      <XCircle size={16} className="mr-2 text-red-600" />
+                      Rejeitada
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="started">
+                    <div className="flex items-center">
+                      <Play size={16} className="mr-2 text-purple-600" />
+                      Iniciar Serviço
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="completed">
+                    <div className="flex items-center">
+                      <CheckSquare size={16} className="mr-2 text-green-600" />
+                      Concluir Serviço
+                    </div>
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
-            <div className="w-full md:w-1/3">
-              <Button
-                onClick={() => handleStatusChange(status)}
-                disabled={loading || status === booking.status}
-                className="w-full"
-              >
-                {loading ? (
-                  <span className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white mr-2"></span>
-                ) : null}
-                Atualizar
-              </Button>
-            </div>
+
+            {/* Reschedule button - only show for pending and approved bookings */}
+            {onReschedule &&
+              (status === "pending" || status === "approved") && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setRescheduleDialogOpen(true)}
+                  disabled={loading}
+                  className="flex items-center gap-2"
+                >
+                  <CalendarClock size={16} />
+                  Reagendar
+                </Button>
+              )}
           </div>
-        )}
+
+          {loading && (
+            <div className="flex items-center justify-center py-2">
+              <Loader2 size={16} className="animate-spin mr-2" />
+              <span className="text-sm text-gray-600 dark:text-gray-400">
+                A processar...
+              </span>
+            </div>
+          )}
+        </div>
       </CardFooter>
+
+      {/* Reschedule Dialog */}
+      {onReschedule && (
+        <RescheduleDialog
+          booking={currentBooking}
+          open={rescheduleDialogOpen}
+          onOpenChange={setRescheduleDialogOpen}
+          onReschedule={handleReschedule}
+        />
+      )}
     </Card>
   );
 }

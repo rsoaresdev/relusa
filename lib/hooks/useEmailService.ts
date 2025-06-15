@@ -9,6 +9,7 @@ type EmailType =
   | "booking_request"
   | "booking_approved"
   | "booking_rejected"
+  | "booking_rescheduled"
   | "service_started"
   | "service_completed"
   | "loyalty_reminder"
@@ -79,6 +80,23 @@ export const useEmailService = () => {
 
   const sendBookingRejectedEmail = async (booking: Booking) => {
     return await sendEmail({ type: "booking_rejected", data: booking });
+  };
+
+  const sendBookingRescheduledEmail = async (
+    booking: Booking,
+    oldDate: string,
+    oldTimeSlot: string,
+    oldCustomTime?: string
+  ) => {
+    return await sendEmail({
+      type: "booking_rescheduled",
+      data: {
+        booking,
+        oldDate,
+        oldTimeSlot,
+        oldCustomTime,
+      },
+    });
   };
 
   const sendServiceStartedEmail = async (booking: Booking) => {
@@ -159,6 +177,7 @@ export const useEmailService = () => {
     sendBookingRequestEmail,
     sendBookingApprovedEmail,
     sendBookingRejectedEmail,
+    sendBookingRescheduledEmail,
     sendServiceStartedEmail,
     sendServiceCompletedEmail,
     sendLoyaltyReminderEmail,

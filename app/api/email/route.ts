@@ -4,6 +4,7 @@ import {
   sendBookingRequestEmail,
   sendBookingApprovedEmail,
   sendBookingRejectedEmail,
+  sendBookingRescheduledEmail,
   sendServiceStartedEmail,
   sendServiceCompletedEmail,
   sendLoyaltyReminderEmail,
@@ -92,6 +93,20 @@ export async function POST(request: Request) {
         break;
       case "booking_rejected":
         result = await sendBookingRejectedEmail(data);
+        break;
+      case "booking_rescheduled":
+        if (!data.booking || !data.oldDate || !data.oldTimeSlot) {
+          return NextResponse.json(
+            { error: "Dados de reagendamento incompletos" },
+            { status: 400 }
+          );
+        }
+        result = await sendBookingRescheduledEmail(
+          data.booking,
+          data.oldDate,
+          data.oldTimeSlot,
+          data.oldCustomTime
+        );
         break;
       case "service_started":
         result = await sendServiceStartedEmail(data);

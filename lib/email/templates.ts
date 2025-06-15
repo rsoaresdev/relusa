@@ -1289,3 +1289,164 @@ export const adminBookingCancelledNotificationTemplate = (
     html: baseLayout(content, "Marcação Cancelada - Relusa Admin"),
   };
 };
+
+// Template de reagendamento de marcação
+export const bookingRescheduledEmailTemplate = (
+  booking: Booking,
+  userName: string,
+  oldDate: string,
+  oldTimeSlot: string,
+  oldCustomTime?: string
+) => {
+  const content = `
+    <div style="text-align: center; margin-bottom: 30px;">
+      <div style="background-color: ${
+        styles.warningColor
+      }; display: inline-block; border-radius: 50%; width: 80px; height: 80px; margin-bottom: 20px;">
+        <div style="color: white; font-size: 40px; line-height: 80px;">📅</div>
+      </div>
+      <h2 style="color: ${
+        styles.warningColor
+      }; margin: 0;">Marcação Reagendada</h2>
+    </div>
+
+    <p>Olá, ${userName || "Cliente"}!</p>
+    <p>Informamos que a sua marcação foi reagendada pela nossa equipa. Pedimos desculpa por qualquer inconveniente causado.</p>
+    
+    <div class="info-box" style="background-color: #fef3c7; border-left: 4px solid ${
+      styles.warningColor
+    };">
+      <h3 style="margin-top: 0; color: ${
+        styles.warningColor
+      };">Dados Anteriores</h3>
+      <table>
+        <tr>
+          <td><strong>Data</strong></td>
+          <td>
+            <div style="display: flex; align-items: center;">
+              <span style="margin-right: 8px;">📅</span>
+              ${formatDate(oldDate)}
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td><strong>Horário</strong></td>
+          <td>
+            <div style="display: flex; align-items: center;">
+              <span style="margin-right: 8px;">⏰</span>
+              ${getTimeSlot(oldTimeSlot, oldCustomTime)}
+            </div>
+          </td>
+        </tr>
+      </table>
+    </div>
+    
+    <div class="info-box">
+      <h3 style="margin-top: 0; color: ${
+        styles.accentColor
+      };">Nova Marcação</h3>
+      <table>
+        <tr>
+          <td><strong>Serviço</strong></td>
+          <td>
+            <div style="display: flex; align-items: center;">
+              <span style="margin-right: 8px;">🚗</span>
+              ${getServiceType(booking.service_type)}
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td><strong>Data</strong></td>
+          <td>
+            <div style="display: flex; align-items: center;">
+              <span style="margin-right: 8px;">📅</span>
+              <strong style="color: ${styles.accentColor};">${formatDate(
+    booking.date
+  )}</strong>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td><strong>Horário</strong></td>
+          <td>
+            <div style="display: flex; align-items: center;">
+              <span style="margin-right: 8px;">⏰</span>
+              <strong style="color: ${styles.accentColor};">${getTimeSlot(
+    booking.time_slot,
+    booking.custom_time
+  )}</strong>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td><strong>Veículo</strong></td>
+          <td>
+            <div style="display: flex; align-items: center;">
+              <span style="margin-right: 8px;">🚘</span>
+              ${booking.car_model} (${booking.car_plate})
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td><strong>Morada</strong></td>
+          <td>
+            <div style="display: flex; align-items: center;">
+              <span style="margin-right: 8px;">📍</span>
+              ${booking.address}
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td><strong>Preço</strong></td>
+          <td>
+            <div style="display: flex; align-items: center;">
+              <span style="margin-right: 8px;">💰</span>
+              <strong>${getPrice(
+                booking.service_type,
+                booking.has_discount || false
+              )}</strong>
+            </div>
+          </td>
+        </tr>
+      </table>
+    </div>
+    
+    <div style="background-color: ${
+      styles.secondaryColor
+    }; border-radius: 8px; padding: 20px; margin: 20px 0;">
+      <h4 style="margin-top: 0; color: ${
+        styles.primaryColor
+      };">📋 Preparação para o Serviço</h4>
+      <ul style="margin: 0; padding-left: 20px;">
+        <li>Certifique-se de que o veículo estará disponível no novo horário agendado</li>
+        <li>Deixe as chaves em local combinado ou esteja presente para entregá-las</li>
+        <li>Remova objetos pessoais valiosos do veículo</li>
+        <li>Em caso de chuva, não se preocupe - nós entraremos em contacto</li>
+      </ul>
+    </div>
+    
+    <div style="text-align: center; margin: 30px 0;">
+      <a href="https://www.relusa.pt/marcacoes" class="button">Ver Minhas Marcações</a>
+    </div>
+    
+    <div style="background-color: #f8fafc; border-radius: 8px; padding: 16px; margin-top: 20px;">
+      <p style="margin: 0; font-size: 14px;">
+        <strong>Precisa de mais alterações?</strong><br>
+        Por favor, contacte-nos através do email <a href="mailto:geral@relusa.pt" style="color: ${
+          styles.primaryColor
+        };">geral@relusa.pt</a> ou telefone <a href="tel:+351932440827" style="color: ${
+    styles.primaryColor
+  };">932 440 827</a>
+      </p>
+    </div>
+    
+    <p>Agradecemos a sua compreensão e esperamos vê-lo na nova data agendada!</p>
+    
+    <p>Atenciosamente,<br>Equipa Relusa</p>
+  `;
+
+  return {
+    subject: "📅 Marcação Reagendada - Relusa",
+    html: baseLayout(content, "Marcação Reagendada - Relusa"),
+  };
+};
