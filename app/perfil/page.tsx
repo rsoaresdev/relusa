@@ -356,7 +356,7 @@ export default function ProfilePage() {
                   {activeTab === "bookings" && (
                     <div>
                       <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">
-                        Minhas Marcações
+                        As Minhas Marcações
                       </h2>
 
                       {bookings.length === 0 ? (
@@ -406,8 +406,8 @@ export default function ProfilePage() {
                                 <div className="text-right">
                                   <div className="text-lg font-bold text-primary">
                                     {booking.service_type === "complete"
-                                      ? "18€"
-                                      : "12€"}
+                                      ? booking.has_discount ? "15€" : "18€"
+                                      : booking.has_discount ? "10€" : "12€"}
                                   </div>
                                 </div>
                               </div>

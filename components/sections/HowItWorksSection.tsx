@@ -38,7 +38,7 @@ const benefits = [
   {
     title: "Ecológico",
     description:
-      "Economiza até 200 litros de água por lavagem comparativamente à lavagem tradicional, usando apenas 1 litro no máximo.",
+      "Economiza até 300 litros de água por lavagem comparativamente à lavagem tradicional, usando apenas 1 litro no máximo.",
     icon: <Leaf className="text-white" size={24} />,
   },
   {
