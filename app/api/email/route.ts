@@ -1,0 +1,166 @@
+import { NextResponse } from "next/server";
+import {
+  sendWelcomeEmail,
+  sendBookingRequestEmail,
+  sendBookingApprovedEmail,
+  sendBookingRejectedEmail,
+  sendServiceStartedEmail,
+  sendServiceCompletedEmail,
+  sendLoyaltyReminderEmail,
+  sendContactFormEmail,
+} from "@/lib/email/service";
+import { verifyEmailConnection } from "@/lib/email/config";
+import { supabase } from "@/lib/supabase/config";
+
+// Função para verificar autenticação de administrador
+const isAdmin = async (token: string) => {
+  try {
+    // Verificar o token JWT
+    const {
+      data: { user },
+      error,
+    } = await supabase.auth.getUser(token);
+
+    if (error || !user) {
+      return false;
+    }
+
+    // Verificar se o utilizador é um administrador
+    const { data: admin } = await supabase
+      .from("admins")
+      .select("*")
+      .eq("user_id", user.id)
+      .single();
+
+    return !!admin;
+  } catch {
+    return false;
+  }
+};
+
+// Rota GET para verificar a conexão com o servidor de email
+export async function GET(request: Request) {
+  // Verificar se a requisição é de um administrador
+  const authHeader = request.headers.get("authorization");
+  const token = authHeader ? authHeader.replace("Bearer ", "") : "";
+
+  if (!(await isAdmin(token))) {
+    return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+  }
+
+  const isConnected = await verifyEmailConnection();
+
+  return NextResponse.json({
+    connected: isConnected,
+    message: isConnected
+      ? "Servidor de email conectado e pronto para enviar"
+      : "Não foi possível conectar ao servidor de email",
+  });
+}
+
+// Rota POST para enviar emails
+export async function POST(request: Request) {
+  try {
+    // Verificar se a requisição é de um administrador ou do sistema
+    const authHeader = request.headers.get("authorization");
+    const token = authHeader ? authHeader.replace("Bearer ", "") : "";
+    const systemKey = request.headers.get("x-system-key");
+
+    const isSystemRequest = systemKey === process.env.SYSTEM_API_KEY;
+    const isAdminRequest = await isAdmin(token);
+
+    // Para o formulário de contacto, não precisamos de autenticação
+    const isContactFormRequest =
+      request.headers.get("x-request-type") === "contact-form";
+
+    if (!isSystemRequest && !isAdminRequest && !isContactFormRequest) {
+      return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+    }
+
+    const body = await request.json();
+    const { type, data } = body;
+
+    if (!type || !data) {
+      return NextResponse.json(
+        { error: "Parâmetros inválidos" },
+        { status: 400 }
+      );
+    }
+
+    let result = false;
+
+    switch (type) {
+      case "welcome":
+        result = await sendWelcomeEmail(data);
+        break;
+      case "booking_request":
+        result = await sendBookingRequestEmail(data);
+        break;
+      case "booking_approved":
+        result = await sendBookingApprovedEmail(data);
+        break;
+      case "booking_rejected":
+        result = await sendBookingRejectedEmail(data);
+        break;
+      case "service_started":
+        result = await sendServiceStartedEmail(data);
+        break;
+      case "service_completed":
+        result = await sendServiceCompletedEmail(data);
+        break;
+      case "loyalty_reminder":
+        if (!data.userId) {
+          return NextResponse.json(
+            {
+              error:
+                "ID de utilizador não fornecido para email de lembrete de fidelidade",
+            },
+            { status: 400 }
+          );
+        }
+        result = await sendLoyaltyReminderEmail(data.userId);
+        break;
+      case "contact_form":
+        // Verificar se é uma requisição do formulário de contacto
+        if (!isContactFormRequest) {
+          return NextResponse.json(
+            { error: "Não autorizado para enviar emails de contacto" },
+            { status: 401 }
+          );
+        }
+
+        // Validar dados do formulário
+        if (!data.name || !data.email || !data.subject || !data.message) {
+          return NextResponse.json(
+            { error: "Dados de formulário incompletos" },
+            { status: 400 }
+          );
+        }
+
+        result = await sendContactFormEmail(data);
+        break;
+      default:
+        return NextResponse.json(
+          { error: "Tipo de email não suportado" },
+          { status: 400 }
+        );
+    }
+
+    if (result) {
+      return NextResponse.json({
+        success: true,
+        message: "Email enviado com sucesso",
+      });
+    } else {
+      return NextResponse.json(
+        { error: "Falha ao enviar email" },
+        { status: 500 }
+      );
+    }
+  } catch {
+    return NextResponse.json(
+      { error: "Erro interno do servidor" },
+      { status: 500 }
+    );
+  }
+}

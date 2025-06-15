@@ -1,28 +1,27 @@
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from "next/server";
 
-export function middleware(request: NextRequest) {
-  // Lidar especificamente com requisições OPTIONS (preflight)
-  if (request.method === 'OPTIONS') {
-    // Criar uma resposta vazia com status 200
-    const response = new NextResponse(null, { status: 200 });
-    
-    // Adicionar headers CORS necessários
-    response.headers.set('Access-Control-Allow-Origin', 
-      process.env.NODE_ENV === 'production' ? 'https://relusa.pt' : '*');
-    response.headers.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-    response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-    response.headers.set('Access-Control-Max-Age', '86400');
-    
-    return response;
-  }
-  
-  // Para outras requisições, continuar normalmente
+/**
+ * Middleware do Next.js
+ * 
+ * Atualmente configurado para permitir acesso a todas as rotas.
+ * A verificação de autenticação é feita no lado do cliente através do ProtectedRoute component.
+ * Esta abordagem permite melhor UX com loading states e redirecionamentos suaves.
+ */
+export async function middleware(req: NextRequest) {
+  // Permitir acesso a todas as rotas - deixar a verificação para o ProtectedRoute
   return NextResponse.next();
 }
 
-// Configurar quais caminhos devem passar pelo middleware
 export const config = {
-  // Aplicar apenas a rotas da API
-  matcher: '/api/:path*',
-}; 
+  matcher: [
+    /*
+     * Match all request paths except for the ones starting with:
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     * - public folder
+     */
+    "/((?!_next/static|_next/image|favicon.ico|public/).*)",
+  ],
+};
+

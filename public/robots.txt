@@ -1,0 +1,13 @@
+# Relusa - Lavagem automóvel a seco
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://relusa.pt/sitemap.xml
+
+# Disallow admin areas
+Disallow: /admin/
+Disallow: /api/
+
+# Crawl delay
+Crawl-delay: 10 
