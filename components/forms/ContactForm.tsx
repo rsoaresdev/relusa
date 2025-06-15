@@ -92,6 +92,7 @@ export default function ContactForm() {
         headers: {
           "Content-Type": "application/json",
           "x-request-type": "contact-form",
+          "x-system-key": process.env.SYSTEM_API_KEY!,
         },
         body: JSON.stringify({
           type: "contact_form",

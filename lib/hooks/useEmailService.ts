@@ -42,6 +42,7 @@ export const useEmailService = () => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "x-system-key": process.env.SYSTEM_API_KEY!,
           Authorization: `Bearer ${session.access_token}`,
         },
         body: JSON.stringify({ type, data }),
@@ -126,6 +127,7 @@ export const useEmailService = () => {
       const response = await fetch("/api/email", {
         method: "GET",
         headers: {
+          "x-system-key": process.env.SYSTEM_API_KEY!,
           Authorization: `Bearer ${session.access_token}`,
         },
       });
