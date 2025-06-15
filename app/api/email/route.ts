@@ -42,14 +42,6 @@ const isAdmin = async (token: string) => {
 
 // Rota GET para verificar a conexão com o servidor de email
 export async function GET(request: Request) {
-  // Verificar se a requisição é de um administrador
-  const authHeader = request.headers.get("authorization");
-  const token = authHeader ? authHeader.replace("Bearer ", "") : "";
-
-  if (!(await isAdmin(token))) {
-    return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
-  }
-
   const isConnected = await verifyEmailConnection();
 
   return NextResponse.json({
@@ -64,18 +56,15 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     // Verificar se a requisição é de um administrador ou do sistema
-    const authHeader = request.headers.get("authorization");
-    const token = authHeader ? authHeader.replace("Bearer ", "") : "";
     const systemKey = request.headers.get("x-system-key");
 
     const isSystemRequest = systemKey === process.env.SYSTEM_API_KEY;
-    const isAdminRequest = await isAdmin(token);
 
     // Para o formulário de contacto, não precisamos de autenticação
     const isContactFormRequest =
       request.headers.get("x-request-type") === "contact-form";
 
-    if (!isSystemRequest && !isAdminRequest && !isContactFormRequest) {
+    if (!isSystemRequest) {
       return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
     }
 

@@ -3,6 +3,9 @@ import { Inter, Poppins } from "next/font/google";
 import "./globals.css";
 import Script from "next/script";
 
+import { Analytics } from "@vercel/analytics/next";
+import { SpeedInsights } from "@vercel/speed-insights/next";
+
 import { Toaster } from "@/components/ui/sonner";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
@@ -96,6 +99,8 @@ export default function RootLayout({
           <AuthProvider>
             <PromoPopup />
             <Header />
+            <Analytics />
+            <SpeedInsights />
             <Toaster richColors closeButton />
             <main className="min-h-screen">{children}</main>
             <Footer />
@@ -114,8 +119,8 @@ export default function RootLayout({
               name: "Relusa",
               description:
                 "Lavagens automóvel a seco em Vila Nova de Gaia. Interior, exterior, jantes e vidros com detalhe profissional.",
-                    image: "https://www.relusa.pt/og-image.png",
-      url: "https://www.relusa.pt",
+              image: "https://www.relusa.pt/og-image.png",
+              url: "https://www.relusa.pt",
               telephone: "+351932440827",
               email: "geral@relusa.pt",
               address: {
