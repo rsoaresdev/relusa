@@ -13,36 +13,9 @@ import {
   sendAdminBookingCancelledNotification,
 } from "@/lib/email/service";
 import { verifyEmailConnection } from "@/lib/email/config";
-import { supabase } from "@/lib/supabase/config";
-
-// Função para verificar autenticação de administrador
-const isAdmin = async (token: string) => {
-  try {
-    // Verificar o token JWT
-    const {
-      data: { user },
-      error,
-    } = await supabase.auth.getUser(token);
-
-    if (error || !user) {
-      return false;
-    }
-
-    // Verificar se o utilizador é um administrador
-    const { data: admin } = await supabase
-      .from("admins")
-      .select("*")
-      .eq("user_id", user.id)
-      .single();
-
-    return !!admin;
-  } catch {
-    return false;
-  }
-};
 
 // Rota GET para verificar a conexão com o servidor de email
-export async function GET(request: Request) {
+export async function GET() {
   const isConnected = await verifyEmailConnection();
 
   return NextResponse.json({

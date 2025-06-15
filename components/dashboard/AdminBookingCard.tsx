@@ -272,68 +272,6 @@ export default function AdminBookingCard({
     return success;
   };
 
-  // Função para renderizar os botões de ação baseados no status atual
-  const renderActionButtons = () => {
-    switch (currentBooking.status) {
-      case "pending":
-        return (
-          <div className="flex gap-2">
-            <Button
-              variant="default"
-              size="sm"
-              className="flex-1 bg-green-600 hover:bg-green-700"
-              onClick={() => handleStatusChange("approved")}
-              disabled={loading}
-            >
-              <CheckCircle size={16} className="mr-2" />
-              Aprovar
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="flex-1 text-red-600 border-red-300 hover:bg-red-50"
-              onClick={() => handleStatusChange("rejected")}
-              disabled={loading}
-            >
-              <XCircle size={16} className="mr-2" />
-              Rejeitar
-            </Button>
-          </div>
-        );
-      case "approved":
-        return (
-          <Button
-            variant="default"
-            size="sm"
-            className="w-full bg-purple-600 hover:bg-purple-700"
-            onClick={() => handleStatusChange("started")}
-            disabled={loading}
-          >
-            <Play size={16} className="mr-2" />
-            Iniciar Serviço
-          </Button>
-        );
-      case "started":
-        return (
-          <Button
-            variant="default"
-            size="sm"
-            className="w-full bg-green-600 hover:bg-green-700"
-            onClick={() => handleStatusChange("completed")}
-            disabled={loading}
-          >
-            <CheckSquare size={16} className="mr-2" />
-            Concluir Serviço
-          </Button>
-        );
-      case "completed":
-      case "rejected":
-        return null;
-      default:
-        return null;
-    }
-  };
-
   return (
     <Card
       className={`overflow-hidden border-l-4 ${statusInfo.color.replace(
