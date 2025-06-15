@@ -29,16 +29,20 @@ export async function GET() {
 // Rota POST para enviar emails
 export async function POST(request: Request) {
   try {
-    // Verificar se a requisição é de um administrador ou do sistema
+    // Verificar se a requisição é do sistema (servidor)
     const systemKey = request.headers.get("x-system-key");
-
     const isSystemRequest = systemKey === process.env.SYSTEM_API_KEY;
 
-    // Para o formulário de contacto, não precisamos de autenticação
+    // Verificar se é uma requisição do formulário de contacto
     const isContactFormRequest =
       request.headers.get("x-request-type") === "contact-form";
 
-    if (!isSystemRequest) {
+    // Verificar se é uma requisição autenticada de utilizador
+    const authHeader = request.headers.get("authorization");
+    const isUserRequest = authHeader && authHeader.startsWith("Bearer ");
+
+    // Verificar autorização: deve ser uma requisição do sistema, do formulário de contacto, ou de utilizador autenticado
+    if (!isSystemRequest && !isContactFormRequest && !isUserRequest) {
       return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
     }
 
@@ -100,14 +104,6 @@ export async function POST(request: Request) {
         result = await sendLoyaltyReminderEmail(data.userId);
         break;
       case "contact_form":
-        // Verificar se é uma requisição do formulário de contacto
-        if (!isContactFormRequest) {
-          return NextResponse.json(
-            { error: "Não autorizado para enviar emails de contacto" },
-            { status: 401 }
-          );
-        }
-
         // Validar dados do formulário
         if (!data.name || !data.email || !data.subject || !data.message) {
           return NextResponse.json(

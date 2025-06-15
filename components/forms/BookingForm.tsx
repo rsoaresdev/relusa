@@ -269,7 +269,7 @@ export default function BookingForm({ session, onCancel }: BookingFormProps) {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
-              "x-system-key": process.env.NEXT_PUBLIC_SYSTEM_API_KEY!,
+              Authorization: `Bearer ${session?.access_token}`,
             },
             body: JSON.stringify({
               type: "admin_new_booking",

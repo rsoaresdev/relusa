@@ -228,7 +228,7 @@ export const sendAdminBookingCancelledNotification = async (
   }
 };
 
-// Função para enviar emails do sistema (sem autenticação de utilizador)
+// Função para enviar emails do sistema (apenas para uso no servidor)
 export const sendSystemEmail = async (type: string, data: any) => {
   try {
     const response = await fetch("/api/email", {
