@@ -151,16 +151,16 @@ const nextConfig = {
   // Configurações de redirecionamento para SEO
   async redirects() {
     return [
-      // Redirecionar URLs sem barra final para URLs com barra final (exceto para rotas de autenticação)
+      // Redirecionar de relusa.pt para www.relusa.pt
       {
-        source: '/:path((?!.+\\..+|_next|auth).*)',
+        source: '/:path*',
         has: [
           {
             type: 'host',
-            value: 'www.relusa.pt',
+            value: 'relusa.pt',
           },
         ],
-        destination: '/:path/',
+        destination: 'https://www.relusa.pt/:path*',
         permanent: true,
       }
     ];
