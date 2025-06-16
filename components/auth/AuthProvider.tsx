@@ -1,6 +1,12 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  useCallback,
+} from "react";
 import { supabase, performLogout } from "@/lib/supabase/config";
 import type { User } from "@/lib/supabase/config";
 
@@ -35,6 +41,54 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
+
+  // Função para verificar sessão quando a página volta a ficar visível
+  const handleVisibilityChange = useCallback(async () => {
+    if (!document.hidden && isInitialized) {
+      // Página voltou a ficar visível, verificar se a sessão ainda é válida
+      try {
+        const {
+          data: { session },
+          error,
+        } = await supabase.auth.getSession();
+
+        if (error) {
+          console.error("Erro ao verificar sessão após visibilidade:", error);
+          return;
+        }
+
+        // Se não há sessão mas tínhamos um utilizador, limpar estado
+        if (!session && user) {
+          setUser(null);
+          setIsAdmin(false);
+        }
+
+        // Se há sessão mas não temos utilizador, recarregar dados
+        if (session && !user) {
+          const { data: userData, error: userError } = await supabase
+            .from("users")
+            .select("*")
+            .eq("id", session.user.id)
+            .single();
+
+          if (!userError && userData) {
+            setUser(userData as User);
+
+            // Verificar se é admin
+            const { data: adminData } = await supabase
+              .from("admins")
+              .select("*")
+              .eq("user_id", session.user.id)
+              .single();
+
+            setIsAdmin(!!adminData);
+          }
+        }
+      } catch (error) {
+        console.error("Erro ao processar mudança de visibilidade:", error);
+      }
+    }
+  }, [isInitialized, user]);
 
   useEffect(() => {
     let isMounted = true;
@@ -132,6 +186,20 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       subscription.unsubscribe();
     };
   }, [isInitialized]);
+
+  // Adicionar listener para mudanças de visibilidade da página
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      document.addEventListener("visibilitychange", handleVisibilityChange);
+
+      return () => {
+        document.removeEventListener(
+          "visibilitychange",
+          handleVisibilityChange
+        );
+      };
+    }
+  }, [handleVisibilityChange]);
 
   const signOut = async () => {
     try {

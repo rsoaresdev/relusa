@@ -10,7 +10,7 @@ import { Toaster } from "@/components/ui/sonner";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
-import { AuthProvider } from "@/components/auth";
+import { AuthProvider, AuthVisibilityMonitor } from "@/components/auth";
 import { PromoPopup } from "@/components/ui/promo-popup";
 import { CookieConsent } from "@/components/ui/cookie-consent";
 
@@ -97,6 +97,7 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <AuthProvider>
+            <AuthVisibilityMonitor />
             <PromoPopup />
             <Header />
             <Analytics />

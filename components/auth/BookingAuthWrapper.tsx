@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import { supabase, performLogout } from "@/lib/supabase/config";
 import { toast } from "sonner";
@@ -15,6 +15,36 @@ export default function BookingAuthWrapper() {
     "login" | "register" | "booking" | "dashboard"
   >("login");
   const searchParams = useSearchParams();
+
+  // Função para verificar sessão quando a página volta a ficar visível
+  const handleVisibilityChange = useCallback(async () => {
+    if (!document.hidden && !loading) {
+      // Página voltou a ficar visível, verificar se a sessão ainda é válida
+      try {
+        const { data, error } = await supabase.auth.getSession();
+
+        if (error) {
+          console.error("Erro ao verificar sessão após visibilidade:", error);
+          return;
+        }
+
+        // Se não há sessão mas tínhamos uma sessão, limpar estado
+        if (!data.session && session) {
+          setSession(null);
+          setView("login");
+          toast.error("Sessão expirou. Por favor, faça login novamente.");
+        }
+
+        // Se há sessão mas não temos sessão local, recarregar
+        if (data.session && !session) {
+          setSession(data.session);
+          setView("dashboard");
+        }
+      } catch (error) {
+        console.error("Erro ao processar mudança de visibilidade:", error);
+      }
+    }
+  }, [loading, session]);
 
   useEffect(() => {
     let mounted = true;
@@ -173,6 +203,20 @@ export default function BookingAuthWrapper() {
       subscription.unsubscribe();
     };
   }, [searchParams]);
+
+  // Adicionar listener para mudanças de visibilidade da página
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      document.addEventListener("visibilitychange", handleVisibilityChange);
+
+      return () => {
+        document.removeEventListener(
+          "visibilitychange",
+          handleVisibilityChange
+        );
+      };
+    }
+  }, [handleVisibilityChange]);
 
   const handleLogout = async () => {
     try {

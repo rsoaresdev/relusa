@@ -51,8 +51,11 @@ export const useAuth = (): UseAuthReturn => {
   const refreshUser = useCallback(async () => {
     try {
       setError(null);
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      
+      const {
+        data: { session },
+        error: sessionError,
+      } = await supabase.auth.getSession();
+
       if (sessionError) {
         console.error("Erro ao obter sessão:", sessionError);
         setError("Erro ao verificar autenticação");
@@ -78,6 +81,38 @@ export const useAuth = (): UseAuthReturn => {
     }
   }, [fetchUserData]);
 
+  // Função para verificar sessão quando a página volta a ficar visível
+  const handleVisibilityChange = useCallback(async () => {
+    if (!document.hidden && isInitialized) {
+      // Página voltou a ficar visível, verificar se a sessão ainda é válida
+      try {
+        const {
+          data: { session },
+          error,
+        } = await supabase.auth.getSession();
+
+        if (error) {
+          console.error("Erro ao verificar sessão após visibilidade:", error);
+          return;
+        }
+
+        // Se não há sessão mas tínhamos um utilizador, limpar estado
+        if (!session && user) {
+          setUser(null);
+          setIsAdmin(false);
+          setError("Sessão expirou. Por favor, faça login novamente.");
+        }
+
+        // Se há sessão mas não temos utilizador, recarregar dados
+        if (session && !user) {
+          await refreshUser();
+        }
+      } catch (error) {
+        console.error("Erro ao processar mudança de visibilidade:", error);
+      }
+    }
+  }, [isInitialized, user, refreshUser]);
+
   useEffect(() => {
     let isMounted = true;
 
@@ -86,8 +121,11 @@ export const useAuth = (): UseAuthReturn => {
 
       try {
         setError(null);
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-        
+        const {
+          data: { session },
+          error: sessionError,
+        } = await supabase.auth.getSession();
+
         if (sessionError) {
           console.error("Erro ao obter sessão inicial:", sessionError);
           setError("Erro ao verificar autenticação");
@@ -115,39 +153,53 @@ export const useAuth = (): UseAuthReturn => {
     initializeAuth();
 
     // Listener para mudanças de autenticação
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        if (!isMounted) return;
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (!isMounted) return;
 
-        try {
-          setError(null);
-          
-          if (session?.user) {
-            const result = await fetchUserData(session.user.id);
-            if (result && isMounted) {
-              setUser(result.user);
-              setIsAdmin(result.isAdmin);
-            }
-          } else {
-            setUser(null);
-            setIsAdmin(false);
+      try {
+        setError(null);
+
+        if (session?.user) {
+          const result = await fetchUserData(session.user.id);
+          if (result && isMounted) {
+            setUser(result.user);
+            setIsAdmin(result.isAdmin);
           }
-        } catch (error) {
-          console.error("Erro ao processar mudança de autenticação:", error);
-          setError("Erro ao processar autenticação");
-        } finally {
-          if (isMounted) {
-            setLoading(false);
-          }
+        } else {
+          setUser(null);
+          setIsAdmin(false);
+        }
+      } catch (error) {
+        console.error("Erro ao processar mudança de autenticação:", error);
+        setError("Erro ao processar autenticação");
+      } finally {
+        if (isMounted) {
+          setLoading(false);
         }
       }
-    );
+    });
 
     return () => {
       isMounted = false;
       subscription.unsubscribe();
     };
   }, [isInitialized, fetchUserData]);
+
+  // Adicionar listener para mudanças de visibilidade da página
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      document.addEventListener("visibilitychange", handleVisibilityChange);
+
+      return () => {
+        document.removeEventListener(
+          "visibilitychange",
+          handleVisibilityChange
+        );
+      };
+    }
+  }, [handleVisibilityChange]);
 
   const signOut = useCallback(async () => {
     try {
@@ -169,4 +221,4 @@ export const useAuth = (): UseAuthReturn => {
     signOut,
     refreshUser,
   };
-}; 
+};
