@@ -309,7 +309,17 @@ export const bookingRequestEmailTemplate = (
   userName: string
 ) => {
   const content = `
-    <h2>Pedido de Agendamento Recebido</h2>
+      <div style="text-align: center; margin-bottom: 30px;">
+      <div style="background-color: ${
+        styles.primaryColor
+      }; display: inline-block; border-radius: 50%; width: 80px; height: 80px; margin-bottom: 20px;">
+        <div style="color: white; font-size: 40px; line-height: 80px;">🚗</div>
+      </div>
+      <h2 style="color: ${
+        styles.primaryColor
+      }; margin: 0;">Pedido de Agendamento Recebido!</h2>
+    </div>
+
     <p>Olá, ${userName || "Cliente"}! 👋</p>
     <p>Recebemos o seu pedido de agendamento para uma lavagem automóvel. Estamos muito felizes em poder ajudar a manter o seu veículo impecável!</p>
     
@@ -521,7 +531,16 @@ export const bookingRejectedEmailTemplate = (
   userName: string
 ) => {
   const content = `
-    <h2>Marcação Não Disponível</h2>
+    <div style="text-align: center; margin-bottom: 30px;">
+      <div style="background-color: ${
+        styles.primaryColor
+      }; display: inline-block; border-radius: 50%; width: 80px; height: 80px; margin-bottom: 20px;">
+        <div style="color: white; font-size: 40px; line-height: 80px;">❌</div>
+      </div>
+      <h2 style="color: ${
+        styles.primaryColor
+      }; margin: 0;">Marcação Não Disponível!</h2>
+    </div>
     <p>Olá, ${userName || "Cliente"}!</p>
     <p>Lamentamos informar que não conseguimos atender ao seu pedido de marcação para a data e horário solicitados.</p>
     
@@ -529,16 +548,31 @@ export const bookingRejectedEmailTemplate = (
       <h3 style="margin-top: 0;">Detalhes da Marcação</h3>
       <table>
         <tr>
-          <td><strong>Serviço:</strong></td>
-          <td>${getServiceType(booking.service_type)}</td>
+          <td><strong>Serviço</strong></td>
+          <td>
+            <div style="display: flex; align-items: center;">
+              <span style="margin-right: 8px;">🚗</span>
+              ${getServiceType(booking.service_type)}
+            </div>
+          </td>
         </tr>
         <tr>
-          <td><strong>Data:</strong></td>
-          <td>${formatDate(booking.date)}</td>
+          <td><strong>Data</strong></td>
+          <td>
+            <div style="display: flex; align-items: center;">
+              <span style="margin-right: 8px;">📅</span>
+              ${formatDate(booking.date)}
+            </div>
+          </td>
         </tr>
         <tr>
-          <td><strong>Horário:</strong></td>
-          <td>${getTimeSlot(booking.time_slot, booking.custom_time)}</td>
+          <td><strong>Horário</strong></td>
+          <td>
+            <div style="display: flex; align-items: center;">
+              <span style="margin-right: 8px;">⏰</span>
+              ${getTimeSlot(booking.time_slot, booking.custom_time)}
+            </div>
+          </td>
         </tr>
       </table>
     </div>
@@ -564,7 +598,7 @@ export const bookingRejectedEmailTemplate = (
   `;
 
   return {
-    subject: "Marcação Não Disponível - Relusa",
+    subject: "❌ Marcação Não Disponível - Relusa",
     html: baseLayout(content, "Marcação Não Disponível - Relusa"),
   };
 };
@@ -575,7 +609,16 @@ export const serviceStartedEmailTemplate = (
   userName: string
 ) => {
   const content = `
-    <h2>Serviço Iniciado</h2>
+        <div style="text-align: center; margin-bottom: 30px;">
+      <div style="background-color: ${
+        styles.primaryColor
+      }; display: inline-block; border-radius: 50%; width: 80px; height: 80px; margin-bottom: 20px;">
+        <div style="color: white; font-size: 40px; line-height: 80px;">🕛</div>
+      </div>
+      <h2 style="color: ${
+        styles.primaryColor
+      }; margin: 0;">Serviço Iniciado!</h2>
+    </div>
     <p>Olá, ${userName || "Cliente"}!</p>
     <p>Informamos que o serviço de lavagem do seu veículo foi <span class="highlight">INICIADO</span>.</p>
     
@@ -583,20 +626,40 @@ export const serviceStartedEmailTemplate = (
       <h3 style="margin-top: 0;">Detalhes da Marcação</h3>
       <table>
         <tr>
-          <td><strong>Serviço:</strong></td>
-          <td>${getServiceType(booking.service_type)}</td>
+          <td><strong>Serviço</strong></td>
+          <td>
+            <div style="display: flex; align-items: center;">
+              <span style="margin-right: 8px;">🚗</span>
+              ${getServiceType(booking.service_type)}
+            </div>
+          </td>
         </tr>
         <tr>
-          <td><strong>Veículo:</strong></td>
-          <td>${booking.car_model} (${booking.car_plate})</td>
+          <td><strong>Veículo</strong></td>
+          <td>
+            <div style="display: flex; align-items: center;">
+              <span style="margin-right: 8px;">🚘</span>
+              ${booking.car_model} (${booking.car_plate})
+            </div>
+          </td>
         </tr>
         <tr>
-          <td><strong>Morada:</strong></td>
-          <td>${booking.address}</td>
+          <td><strong>Morada</strong></td>
+          <td>
+            <div style="display: flex; align-items: center;">
+              <span style="margin-right: 8px;">📍</span>
+              ${booking.address}
+            </div>
+          </td>
         </tr>
         <tr>
-          <td><strong>Início:</strong></td>
-          <td>${formatTimestamp(booking.start_time)}</td>
+          <td><strong>Início</strong></td>
+          <td>
+            <div style="display: flex; align-items: center;">
+              <span style="margin-right: 8px;">🚀</span>
+              ${formatTimestamp(booking.start_time)}
+            </div>
+          </td>
         </tr>
       </table>
     </div>
@@ -615,7 +678,7 @@ export const serviceStartedEmailTemplate = (
   `;
 
   return {
-    subject: "Serviço Iniciado - Relusa",
+    subject: "🚀 Serviço Iniciado - Relusa",
     html: baseLayout(content, "Serviço Iniciado - Relusa"),
   };
 };
@@ -770,10 +833,12 @@ export const loyaltyReminderEmailTemplate = (
               <div style="text-align: center;">
                 <div style="width: 40px; height: 40px; border-radius: 50%; background-color: ${
                   isCompleted ? styles.accentColor : "#e2e8f0"
-                }; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; margin: 0 auto;">
+                }; display: flex; align-items: center; justify-content: center; color: ${
+                  isCompleted ? "white" : "#9ca3af"
+                }; font-weight: bold; margin: 0 auto; font-size: 16px;">
                   ${i + 1}
                 </div>
-                <div style="font-size: 12px; color: #64748b; margin-top: 5px;">
+                <div style="font-size: 12px; color: #64748b; margin-top: 5px; text-align: center;">
                   ${isCompleted ? "✓" : ""}
                 </div>
               </div>
@@ -958,7 +1023,7 @@ export const contactFormEmailTemplate = (data: ContactFormData) => {
   `;
 
   return {
-    subject: `Nova Mensagem de Contacto: ${getSubjectLabel(data.subject)}`,
+    subject: `📧 Nova Mensagem de Contacto: ${getSubjectLabel(data.subject)}`,
     html: baseLayout(content, "Nova Mensagem de Contacto - Relusa"),
   };
 };
@@ -1499,6 +1564,21 @@ export const invoiceIssuedEmailTemplate = (
             </div>
           </td>
         </tr>
+        ${
+          booking.nif
+            ? `
+        <tr>
+          <td><strong>NIF</strong></td>
+          <td>
+            <div style="display: flex; align-items: center;">
+              <span style="margin-right: 8px;">🏢</span>
+              ${booking.nif}
+            </div>
+          </td>
+        </tr>
+        `
+            : ""
+        }
         <tr>
           <td><strong>Valor</strong></td>
           <td>
