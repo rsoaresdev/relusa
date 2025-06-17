@@ -33,7 +33,7 @@ export default function TermosPage() {
               Termos de Uso
             </h1>
             <p className="text-xl text-gray-600 dark:text-gray-400">
-              Última atualização: 16 de junho de 2025
+              Última atualização: 17 de junho de 2025
             </p>
           </div>
         </div>
@@ -451,6 +451,30 @@ export default function TermosPage() {
                     <li>Descontos e promoções não são acumuláveis</li>
                     <li>
                       O pagamento deve ser efetuado após a conclusão do serviço
+                    </li>
+                  </ul>
+
+                  <h3 className="text-lg font-semibold mt-6 mb-2">
+                    Emissão e Gestão de Faturas
+                  </h3>
+                  <ul className="pl-6 mb-4">
+                    <li>
+                      Todas as faturas são emitidas após a conclusão do serviço
+                    </li>
+                    <li>
+                      As faturas são disponibilizadas num prazo máximo de 5 dias úteis
+                    </li>
+                    <li>
+                      O cliente é notificado por email quando a fatura fica disponível
+                    </li>
+                    <li>
+                      As faturas podem ser consultadas e descarregadas através da área de cliente
+                    </li>
+                    <li>
+                      O NIF deve ser fornecido no momento da marcação para emissão de fatura
+                    </li>
+                    <li>
+                      Mantemos uma cópia digital de todas as faturas emitidas por motivos legais
                     </li>
                   </ul>
                 </div>

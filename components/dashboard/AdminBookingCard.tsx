@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Booking } from "@/lib/supabase/config";
+import { Booking, supabase } from "@/lib/supabase/config";
 import { format, parseISO, differenceInMinutes } from "date-fns";
 import { pt } from "date-fns/locale";
 import {
@@ -18,6 +18,8 @@ import {
   CheckSquare,
   User,
   CalendarClock,
+  FileText,
+  Upload,
 } from "lucide-react";
 import {
   Select,
@@ -33,6 +35,7 @@ import {
   CardHeader,
 } from "@/components/ui/card";
 import RescheduleDialog from "./RescheduleDialog";
+import InvoiceUpload from "./InvoiceUpload";
 
 interface AdminBookingCardProps {
   booking: Booking & {
@@ -67,6 +70,40 @@ export default function AdminBookingCard({
   >(booking.status);
   const [currentBooking, setCurrentBooking] = useState(booking);
   const [rescheduleDialogOpen, setRescheduleDialogOpen] = useState(false);
+  const [invoiceUploadOpen, setInvoiceUploadOpen] = useState(false);
+  const [hasInvoice, setHasInvoice] = useState(false);
+  const [checkingInvoice, setCheckingInvoice] = useState(false);
+
+  // Verificar se já existe fatura para esta marcação
+  useEffect(() => {
+    const checkExistingInvoice = async () => {
+      if (booking.status === "completed") {
+        setCheckingInvoice(true);
+        try {
+          const { data, error } = await supabase
+            .from("invoices")
+            .select("id")
+            .eq("booking_id", booking.id)
+            .single();
+
+          if (!error && data) {
+            setHasInvoice(true);
+          }
+        } catch (error) {
+          // Ignorar erros - pode não ter fatura ainda
+        } finally {
+          setCheckingInvoice(false);
+        }
+      }
+    };
+
+    checkExistingInvoice();
+  }, [booking.id, booking.status]);
+
+  // Função para lidar com o sucesso do upload da fatura
+  const handleInvoiceUploadSuccess = () => {
+    setHasInvoice(true);
+  };
 
   // Função para formatar a data
   const formatDate = (dateString: string) => {
@@ -457,6 +494,34 @@ export default function AdminBookingCard({
               )}
           </div>
 
+          {/* Invoice upload button - only show for completed bookings */}
+          {status === "completed" && (
+            <div className="flex items-center justify-between pt-2 border-t border-gray-200 dark:border-gray-700">
+              <div className="flex items-center gap-2">
+                <FileText size={16} className="text-gray-500" />
+                <span className="text-sm text-gray-600 dark:text-gray-400">
+                  {hasInvoice ? "Fatura anexada" : "Sem fatura"}
+                </span>
+              </div>
+              {!hasInvoice && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setInvoiceUploadOpen(true)}
+                  disabled={loading || checkingInvoice}
+                  className="flex items-center gap-2"
+                >
+                  {checkingInvoice ? (
+                    <Loader2 size={16} className="animate-spin" />
+                  ) : (
+                    <Upload size={16} />
+                  )}
+                  Anexar Fatura
+                </Button>
+              )}
+            </div>
+          )}
+
           {loading && (
             <div className="flex items-center justify-center py-2">
               <Loader2 size={16} className="animate-spin mr-2" />
@@ -477,6 +542,15 @@ export default function AdminBookingCard({
           onReschedule={handleReschedule}
         />
       )}
+
+      {/* Invoice Upload Dialog */}
+      <InvoiceUpload
+        bookingId={booking.id}
+        userId={booking.user_id}
+        open={invoiceUploadOpen}
+        onOpenChange={setInvoiceUploadOpen}
+        onUploadSuccess={handleInvoiceUploadSuccess}
+      />
     </Card>
   );
 }

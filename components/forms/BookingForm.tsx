@@ -54,6 +54,7 @@ export default function BookingForm({ session, onCancel }: BookingFormProps) {
     car_model: "",
     address: "",
     notes: "",
+    nif: "",
     is_foreign_plate: false,
   });
 
@@ -247,6 +248,7 @@ export default function BookingForm({ session, onCancel }: BookingFormProps) {
             car_model: formData.car_model,
             address: formData.address,
             notes: formData.notes,
+            nif: formData.nif,
             status: "pending",
             has_discount: hasDiscount,
             is_foreign_plate: formData.is_foreign_plate,
@@ -294,6 +296,7 @@ export default function BookingForm({ session, onCancel }: BookingFormProps) {
         car_model: "",
         address: "",
         notes: "",
+        nif: "",
         is_foreign_plate: false,
       });
 
@@ -673,6 +676,29 @@ export default function BookingForm({ session, onCancel }: BookingFormProps) {
               placeholder="Morada completa ou ponto de referência onde o carro estará estacionado"
             />
           </div>
+        </div>
+
+        {/* NIF */}
+        <div>
+          <label
+            htmlFor="nif"
+            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+          >
+            NIF (opcional)
+          </label>
+          <input
+            type="text"
+            id="nif"
+            name="nif"
+            value={formData.nif}
+            onChange={handleChange}
+            maxLength={9}
+            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-md focus:ring-2 focus:ring-primary focus:border-primary dark:bg-gray-800 dark:text-white"
+            placeholder="Ex: 123456789"
+          />
+          <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+            Necessário para emissão de fatura
+          </p>
         </div>
 
         {/* Notas */}

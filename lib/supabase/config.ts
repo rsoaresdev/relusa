@@ -59,6 +59,7 @@ export type Booking = {
   address: string;
   status: "pending" | "approved" | "rejected" | "started" | "completed";
   notes?: string;
+  nif?: string;
   start_time?: string | null;
   end_time?: string | null;
   has_discount?: boolean;
@@ -74,6 +75,16 @@ export type LoyaltyPoints = {
   bookings_count: number;
   created_at: string;
   updated_at: string | null;
+};
+
+export type Invoice = {
+  id: string;
+  booking_id: string;
+  user_id: string;
+  file_path: string;
+  file_name: string;
+  created_at: string;
+  updated_at: string;
 };
 
 // Cache simples para evitar chamadas desnecessárias
@@ -209,6 +220,46 @@ export const isUserAdmin = async (userId: string): Promise<boolean> => {
 };
 
 // Função para limpar cache quando necessário
+export const getUserInvoices = async (userId: string): Promise<Invoice[]> => {
+  try {
+    const { data, error } = await supabase
+      .from("invoices")
+      .select("*")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error("Erro ao obter faturas:", error);
+      return [];
+    }
+
+    return data as Invoice[];
+  } catch (error) {
+    console.error("Erro inesperado ao obter faturas:", error);
+    return [];
+  }
+};
+
+export const getInvoiceSignedUrl = async (
+  filePath: string
+): Promise<string | null> => {
+  try {
+    const { data, error } = await supabase.storage
+      .from("invoices")
+      .createSignedUrl(filePath, 60 * 60); // 1 hora
+
+    if (error) {
+      console.error("Erro ao gerar URL da fatura:", error);
+      return null;
+    }
+
+    return data.signedUrl;
+  } catch (error) {
+    console.error("Erro inesperado ao gerar URL da fatura:", error);
+    return null;
+  }
+};
+
 export const clearUserCache = (userId?: string) => {
   if (userId) {
     userCache.delete(userId);

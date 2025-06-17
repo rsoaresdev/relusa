@@ -32,7 +32,7 @@ export default function PrivacidadePage() {
               Política de Privacidade
             </h1>
             <p className="text-xl text-gray-600 dark:text-gray-400">
-              Última atualização: 16 de junho de 2025
+              Última atualização: 17 de junho de 2025
             </p>
           </div>
         </div>
@@ -257,6 +257,7 @@ export default function PrivacidadePage() {
                     <li>Número de telefone</li>
                     <li>Endereço de email</li>
                     <li>Morada para prestação do serviço</li>
+                    <li>NIF (opcional, para emissão de fatura)</li>
                   </ul>
 
                   <h3 className="text-lg font-semibold mt-4 mb-2">
@@ -292,6 +293,22 @@ export default function PrivacidadePage() {
                     Não armazenamos dados de cartões de crédito ou débito. Todas
                     as transações são processadas através de prestadores de
                     serviços de pagamento seguros.
+                  </p>
+
+                  <h3 className="text-lg font-semibold mt-4 mb-2">
+                    Dados de Faturação
+                  </h3>
+                  <ul className="pl-6">
+                    <li>NIF (quando fornecido pelo cliente)</li>
+                    <li>Faturas emitidas em formato PDF</li>
+                    <li>Historial de faturas e pagamentos</li>
+                    <li>Data de emissão e entrega das faturas</li>
+                  </ul>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
+                    <strong>Nota:</strong> As faturas são armazenadas de forma
+                    segura e apenas são acessíveis pelo cliente através da sua
+                    área pessoal no website e pelos administradores para fins de
+                    gestão e cumprimento de obrigações legais.
                   </p>
                 </div>
 

@@ -59,7 +59,7 @@ export const useAuth = (): UseAuthReturn => {
       userId: string
     ): Promise<{ user: User; isAdmin: boolean } | null> => {
       try {
-        // Buscar dados do utilizador
+        // Procurar dados do utilizador
         const { data: userData, error: userError } = await supabase
           .from("users")
           .select("*")
@@ -83,7 +83,7 @@ export const useAuth = (): UseAuthReturn => {
           isAdmin: !!adminData,
         };
       } catch (error) {
-        console.error("Erro ao buscar perfil do utilizador:", error);
+        console.error("Erro ao procurar perfil do utilizador:", error);
         return null;
       }
     },
@@ -149,7 +149,7 @@ export const useAuth = (): UseAuthReturn => {
           return;
         }
 
-        // Buscar dados do utilizador
+        // Procurar dados do utilizador
         const userProfile = await fetchUserProfile(session.user.id);
 
         if (userProfile) {
@@ -258,7 +258,7 @@ export const useAuth = (): UseAuthReturn => {
           updateAuthState(null, false);
           setLoading(false);
         } else if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
-          // Buscar dados do utilizador
+          // Procurar dados do utilizador
           const userProfile = await fetchUserProfile(session.user.id);
 
           if (userProfile && isMountedRef.current) {

@@ -9,6 +9,7 @@ import {
   ChevronDown,
   LayoutDashboard,
   AlertCircle,
+  FileText,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -33,7 +34,9 @@ export default function ProfileDropdown() {
       // Configurar timeout de 8 segundos para o ProfileDropdown
       loadingTimeoutRef.current = setTimeout(() => {
         if (loading) {
-          console.warn("ProfileDropdown: Timeout de loading atingido, tentando refresh");
+          console.warn(
+            "ProfileDropdown: Timeout de loading atingido, tentando refresh"
+          );
           refreshUser().catch((error) => {
             console.error("Erro ao refresh do ProfileDropdown:", error);
           });
@@ -112,6 +115,19 @@ export default function ProfileDropdown() {
             >
               <Settings size={16} className="mr-2" />
               Configurações
+            </Button>
+          </Link>
+
+          <Link href="/perfil/faturas" className="w-full">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="w-full justify-start text-sm"
+              tabIndex={0}
+              aria-label="As minhas faturas"
+            >
+              <FileText size={16} className="mr-2" />
+              As Minhas Faturas
             </Button>
           </Link>
 

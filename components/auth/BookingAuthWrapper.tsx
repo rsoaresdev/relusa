@@ -80,11 +80,6 @@ export default function BookingAuthWrapper() {
       if (!mountedRef.current) return;
 
       if (currentSession?.user) {
-        console.log(
-          "Processando sessão do utilizador:",
-          currentSession.user.id
-        );
-
         // Verificar se o utilizador existe na BD
         const { data: existingUser } = await supabase
           .from("users")
@@ -94,7 +89,6 @@ export default function BookingAuthWrapper() {
 
         // Se não existe, criar
         if (!existingUser) {
-          console.log("Criando novo utilizador na BD");
           await supabase.from("users").insert([
             {
               id: currentSession.user.id,
@@ -120,7 +114,6 @@ export default function BookingAuthWrapper() {
         }
 
         if (mountedRef.current) {
-          console.log("Definindo sessão e indo para dashboard");
           setSession(currentSession);
           setView("dashboard");
           setLoading(false);
@@ -138,7 +131,6 @@ export default function BookingAuthWrapper() {
         }
       } else {
         if (mountedRef.current) {
-          console.log("Nenhuma sessão encontrada, indo para login");
           setSession(null);
           setView("login");
           setLoading(false);
@@ -155,22 +147,14 @@ export default function BookingAuthWrapper() {
     // Verificação inicial com retry para OAuth
     const checkInitialSession = async (retryCount = 0) => {
       try {
-        console.log(
-          `Verificação de sessão inicial (tentativa ${retryCount + 1})`
-        );
-
         // Se há tokens OAuth na URL, aguardar mais tempo para o Supabase processar
         if (hasOAuthTokens && retryCount === 0) {
-          console.log(
-            "Tokens OAuth detetados na URL, aguardando processamento..."
-          );
           await new Promise((resolve) => setTimeout(resolve, 2000));
         }
 
         const { data, error } = await supabase.auth.getSession();
 
         if (error) {
-          console.error("Erro ao verificar sessão:", error);
           if (mountedRef.current) {
             setLoading(false);
             // Limpar timeout de segurança
@@ -212,7 +196,6 @@ export default function BookingAuthWrapper() {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log("Auth change:", event, !!session);
       if (mountedRef.current) {
         await processSession(session);
       }

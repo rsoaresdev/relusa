@@ -232,7 +232,7 @@ export default function AdminDashboard({
           // e enviar emails de lembrete ou desconto conforme apropriado
           // Aguardar um momento para garantir que o trigger da base de dados atualizou os pontos
           setTimeout(async () => {
-            // Buscar os pontos de fidelidade atualizados
+            // Procurar os pontos de fidelidade atualizados
             const { data: loyaltyData, error: loyaltyError } = await supabase
               .from("loyalty_points")
               .select("*")

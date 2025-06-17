@@ -12,6 +12,7 @@ import {
   contactFormEmailTemplate,
   adminNewBookingNotificationTemplate,
   adminBookingCancelledNotificationTemplate,
+  invoiceIssuedEmailTemplate,
   ContactFormData,
 } from "./templates";
 import { User, Booking, LoyaltyPoints } from "@/lib/supabase/config";
@@ -224,6 +225,85 @@ export const sendAdminBookingCancelledNotification = async (
     // Enviar para o email administrativo
     return await sendEmail("geral@relusa.pt", subject, html);
   } catch {
+    return false;
+  }
+};
+
+// Enviar email de fatura emitida com anexo
+export const sendInvoiceIssuedEmail = async (
+  bookingId: string,
+  filePath: string
+) => {
+  try {
+    // Obter dados da marcação
+    const { data: booking, error: bookingError } = await supabaseAdmin
+      .from("bookings")
+      .select("*")
+      .eq("id", bookingId)
+      .single();
+
+    if (bookingError || !booking) {
+      console.error(
+        "[sendInvoiceIssuedEmail] Erro ao obter booking:",
+        bookingError
+      );
+      return false;
+    }
+
+    // Obter dados do utilizador
+    const user = await getUserData(booking.user_id);
+    if (!user) {
+      console.error("[sendInvoiceIssuedEmail] Utilizador não encontrado");
+      return false;
+    }
+
+    // Obter URL assinada para o ficheiro
+    const { data: urlData, error: urlError } = await supabaseAdmin.storage
+      .from("invoices")
+      .createSignedUrl(filePath, 60 * 60 * 24); // 24 horas
+
+    if (urlError || !urlData?.signedUrl) {
+      console.error(
+        "[sendInvoiceIssuedEmail] Erro ao gerar URL assinada:",
+        urlError
+      );
+      return false;
+    }
+
+    // Fazer download do ficheiro para anexar ao email
+    const response = await fetch(urlData.signedUrl);
+    if (!response.ok) {
+      console.error(
+        `[sendInvoiceIssuedEmail] Erro no download: ${response.status} ${response.statusText}`
+      );
+      return false;
+    }
+    const buffer = await response.arrayBuffer();
+
+    const { subject, html } = invoiceIssuedEmailTemplate(
+      booking as Booking,
+      user.name
+    );
+
+    // Opções de email com anexo
+    const mailOptions = {
+      ...emailDefaults,
+      to: user.email,
+      subject,
+      html,
+      attachments: [
+        {
+          filename: `fatura_${bookingId}.pdf`,
+          content: Buffer.from(buffer),
+          contentType: "application/pdf",
+        },
+      ],
+    };
+
+    await emailTransporter.sendMail(mailOptions);
+    return true;
+  } catch (error) {
+    console.error("Erro ao enviar email de fatura emitida:", error);
     return false;
   }
 };

@@ -1450,3 +1450,119 @@ export const bookingRescheduledEmailTemplate = (
     html: baseLayout(content, "Marcação Reagendada - Relusa"),
   };
 };
+
+// Template de fatura emitida
+export const invoiceIssuedEmailTemplate = (
+  booking: Booking,
+  userName: string
+) => {
+  const content = `
+    <div style="text-align: center; margin-bottom: 30px;">
+      <div style="background-color: ${
+        styles.primaryColor
+      }; display: inline-block; border-radius: 50%; width: 80px; height: 80px; margin-bottom: 20px;">
+        <div style="color: white; font-size: 40px; line-height: 80px;">🧾</div>
+      </div>
+      <h2 style="color: ${styles.primaryColor}; margin: 0;">Fatura Emitida</h2>
+    </div>
+
+    <p>Olá, ${userName || "Cliente"}!</p>
+    <p>Informamos que a fatura do seu serviço de lavagem foi emitida e está disponível em anexo a este email.</p>
+    
+    <div class="info-box">
+      <h3 style="margin-top: 0;">Detalhes do Serviço</h3>
+      <table>
+        <tr>
+          <td><strong>Serviço</strong></td>
+          <td>
+            <div style="display: flex; align-items: center;">
+              <span style="margin-right: 8px;">🚗</span>
+              ${getServiceType(booking.service_type)}
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td><strong>Data de Realização</strong></td>
+          <td>
+            <div style="display: flex; align-items: center;">
+              <span style="margin-right: 8px;">📅</span>
+              ${formatDate(booking.date)}
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td><strong>Veículo</strong></td>
+          <td>
+            <div style="display: flex; align-items: center;">
+              <span style="margin-right: 8px;">🚘</span>
+              ${booking.car_model} (${booking.car_plate})
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td><strong>Valor</strong></td>
+          <td>
+            <div style="display: flex; align-items: center;">
+              <span style="margin-right: 8px;">💰</span>
+              <strong style="color: ${styles.accentColor};">${getPrice(
+    booking.service_type,
+    booking.has_discount || false
+  )}</strong>
+              ${
+                booking.has_discount
+                  ? ' <span style="color: ' +
+                    styles.accentColor +
+                    '; font-size: 12px;">(Com desconto de fidelidade)</span>'
+                  : ""
+              }
+            </div>
+          </td>
+        </tr>
+      </table>
+    </div>
+    
+    <div style="background-color: ${
+      styles.secondaryColor
+    }; border-radius: 8px; padding: 20px; margin: 20px 0;">
+      <h4 style="margin-top: 0; color: ${
+        styles.primaryColor
+      };">📎 Fatura em Anexo</h4>
+      <p style="margin: 10px 0; font-size: 14px;">
+        A fatura em formato PDF está anexada a este email. Pode também aceder a todas as suas faturas através da área de cliente no nosso website.
+      </p>
+    </div>
+    
+    <div style="text-align: center; margin: 30px 0;">
+      <a href="https://www.relusa.pt/perfil" class="button">Ver Área de Cliente</a>
+    </div>
+    
+    <div style="background-color: #e6f3ff; border-radius: 8px; padding: 16px; margin: 20px 0; border-left: 4px solid ${
+      styles.primaryColor
+    };">
+      <p style="margin: 0; font-size: 14px;">
+        <strong>ℹ️ Informação Importante:</strong><br>
+        Todas as suas faturas ficam guardadas na área de cliente para consulta futura. Pode descarregá-las a qualquer momento através do seu perfil.
+      </p>
+    </div>
+    
+    <div style="background-color: #f8fafc; border-radius: 8px; padding: 16px; margin-top: 20px;">
+      <p style="margin: 0; font-size: 14px;">
+        <strong>Precisa de ajuda?</strong><br>
+        Se tiver alguma questão sobre a sua fatura, contacte-nos através do email <a href="mailto:geral@relusa.pt" style="color: ${
+          styles.primaryColor
+        };">geral@relusa.pt</a> ou telefone <a href="tel:+351932440827" style="color: ${
+    styles.primaryColor
+  };">932 440 827</a>
+      </p>
+    </div>
+    
+    <p>Obrigado por escolher a Relusa!</p>
+    
+    <p>Atenciosamente,<br>Equipa Relusa</p>
+  `;
+
+  return {
+    subject: "🧾 Fatura Emitida - Relusa",
+    html: baseLayout(content, "Fatura Emitida - Relusa"),
+  };
+};
