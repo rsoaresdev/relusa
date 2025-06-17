@@ -2,10 +2,10 @@
 
 import { ProtectedRoute } from "@/components/auth";
 import AdminDashboard from "@/components/dashboard/AdminDashboard";
-import { useAuth } from "@/components/auth";
+import { useAuthContext } from "@/components/auth";
 
 export default function AdminPage() {
-  const { user, signOut } = useAuth();
+  const { user, signOut } = useAuthContext();
 
   return (
     <ProtectedRoute requireAdmin={true}>

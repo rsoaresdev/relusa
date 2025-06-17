@@ -10,7 +10,7 @@ import { Toaster } from "@/components/ui/sonner";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
-import { AuthProvider, AuthVisibilityMonitor } from "@/components/auth";
+import { AuthProvider } from "@/components/auth";
 import { PromoPopup } from "@/components/ui/promo-popup";
 import { CookieConsent } from "@/components/ui/cookie-consent";
 
@@ -97,7 +97,6 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <AuthProvider>
-            <AuthVisibilityMonitor />
             <PromoPopup />
             <Header />
             <Analytics />
@@ -119,7 +118,7 @@ export default function RootLayout({
               "@type": "LocalBusiness",
               name: "Relusa",
               description:
-                "Lavagens automóvel a seco em Vila Nova de Gaia. Interior, exterior, jantes e vidros com detalhe profissional.",
+                "Damos mais brilho a Gaia! Serviço premium de lavagem automóvel a seco em Vila Nova de Gaia. Relusa — o seu carro não recusa.",
               image: "https://www.relusa.pt/og-image.png",
               url: "https://www.relusa.pt",
               telephone: "+351932440827",
@@ -146,8 +145,8 @@ export default function RootLayout({
                     "Friday",
                     "Saturday",
                   ],
-                  opens: "09:00",
-                  closes: "19:00",
+                  opens: "08:00",
+                  closes: "20:00",
                 },
               ],
               priceRange: "€€",

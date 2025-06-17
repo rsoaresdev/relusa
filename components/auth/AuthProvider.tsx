@@ -3,11 +3,11 @@
 import {
   createContext,
   useContext,
+  ReactNode,
   useEffect,
-  useState,
-  useCallback,
+  useRef,
 } from "react";
-import { supabase, performLogout } from "@/lib/supabase/config";
+import { useAuth } from "@/lib/hooks/useAuth";
 import type { User } from "@/lib/supabase/config";
 
 interface AuthContextType {
@@ -15,204 +15,62 @@ interface AuthContextType {
   loading: boolean;
   isAdmin: boolean;
   signOut: () => Promise<void>;
+  refreshUser: () => Promise<void>;
 }
 
-const AuthContext = createContext<AuthContextType>({
-  user: null,
-  loading: true,
-  isAdmin: false,
-  signOut: async () => {},
-});
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const useAuth = () => {
+export const useAuthContext = () => {
   const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error("useAuth deve ser usado dentro de AuthProvider");
+  if (context === undefined) {
+    throw new Error("useAuthContext deve ser usado dentro de um AuthProvider");
   }
   return context;
 };
 
 interface AuthProviderProps {
-  children: React.ReactNode;
+  children: ReactNode;
 }
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [isInitialized, setIsInitialized] = useState(false);
+  const { user, loading, isAdmin, signOut, refreshUser } = useAuth();
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Função para verificar sessão quando a página volta a ficar visível
-  const handleVisibilityChange = useCallback(async () => {
-    if (!document.hidden && isInitialized) {
-      // Página voltou a ficar visível, verificar se a sessão ainda é válida
-      try {
-        const {
-          data: { session },
-          error,
-        } = await supabase.auth.getSession();
-
-        if (error) {
-          console.error("Erro ao verificar sessão após visibilidade:", error);
-          return;
-        }
-
-        // Se não há sessão mas tínhamos um utilizador, limpar estado
-        if (!session && user) {
-          setUser(null);
-          setIsAdmin(false);
-        }
-
-        // Se há sessão mas não temos utilizador, recarregar dados
-        if (session && !user) {
-          const { data: userData, error: userError } = await supabase
-            .from("users")
-            .select("*")
-            .eq("id", session.user.id)
-            .single();
-
-          if (!userError && userData) {
-            setUser(userData as User);
-
-            // Verificar se é admin
-            const { data: adminData } = await supabase
-              .from("admins")
-              .select("*")
-              .eq("user_id", session.user.id)
-              .single();
-
-            setIsAdmin(!!adminData);
-          }
-        }
-      } catch (error) {
-        console.error("Erro ao processar mudança de visibilidade:", error);
-      }
-    }
-  }, [isInitialized, user]);
-
+  // Timeout de segurança adicional no provider
   useEffect(() => {
-    let isMounted = true;
-
-    // Verificar sessão inicial
-    const getInitialSession = async () => {
-      try {
-        const {
-          data: { session },
-          error,
-        } = await supabase.auth.getSession();
-
-        if (error) {
-          console.error("Erro ao obter sessão inicial:", error);
-          if (isMounted) {
-            setLoading(false);
-            setIsInitialized(true);
-          }
-          return;
-        }
-
-        if (session?.user && isMounted) {
-          const { data: userData, error: userError } = await supabase
-            .from("users")
-            .select("*")
-            .eq("id", session.user.id)
-            .single();
-
-          if (!userError && userData && isMounted) {
-            setUser(userData as User);
-
-            // Verificar se é admin
-            const { data: adminData } = await supabase
-              .from("admins")
-              .select("*")
-              .eq("user_id", session.user.id)
-              .single();
-
-            setIsAdmin(!!adminData);
-          }
-        }
-      } catch (error) {
-        console.error("Erro inesperado ao verificar sessão:", error);
-      } finally {
-        if (isMounted) {
-          setLoading(false);
-          setIsInitialized(true);
-        }
+    if (loading) {
+      // Limpar timeout anterior se existir
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
       }
-    };
 
-    if (!isInitialized) {
-      getInitialSession();
+      // Configurar novo timeout de 15 segundos
+      timeoutRef.current = setTimeout(() => {
+        console.warn("AuthProvider: Timeout de loading atingido");
+        // Forçar refresh se ainda estiver em loading após 15 segundos
+        if (loading) {
+          refreshUser().catch((error) => {
+            console.error("Erro ao forçar refresh após timeout:", error);
+          });
+        }
+      }, 15000);
+    } else {
+      // Limpar timeout se não estiver mais em loading
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+        timeoutRef.current = null;
+      }
     }
-
-    // Escutar mudanças de autenticação
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (!isMounted) return;
-
-      try {
-        if (session?.user) {
-          const { data: userData, error: userError } = await supabase
-            .from("users")
-            .select("*")
-            .eq("id", session.user.id)
-            .single();
-
-          if (!userError && userData) {
-            setUser(userData as User);
-
-            // Verificar se é admin
-            const { data: adminData } = await supabase
-              .from("admins")
-              .select("*")
-              .eq("user_id", session.user.id)
-              .single();
-
-            setIsAdmin(!!adminData);
-          }
-        } else {
-          setUser(null);
-          setIsAdmin(false);
-        }
-      } catch (error) {
-        console.error("Erro ao processar mudança de autenticação:", error);
-      } finally {
-        setLoading(false);
-      }
-    });
 
     return () => {
-      isMounted = false;
-      subscription.unsubscribe();
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
     };
-  }, [isInitialized]);
-
-  // Adicionar listener para mudanças de visibilidade da página
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      document.addEventListener("visibilitychange", handleVisibilityChange);
-
-      return () => {
-        document.removeEventListener(
-          "visibilitychange",
-          handleVisibilityChange
-        );
-      };
-    }
-  }, [handleVisibilityChange]);
-
-  const signOut = async () => {
-    try {
-      await performLogout();
-    } catch (error) {
-      console.error("Erro ao fazer logout:", error);
-      // Fallback: forçar refresh mesmo assim
-      window.location.href = "/";
-    }
-  };
+  }, [loading, refreshUser]);
 
   return (
-    <AuthContext.Provider value={{ user, loading, isAdmin, signOut }}>
+    <AuthContext.Provider value={{ user, loading, isAdmin, signOut, refreshUser }}>
       {children}
     </AuthContext.Provider>
   );

@@ -1,6 +1,6 @@
 "use client";
 
-import { useAuth } from "./AuthProvider";
+import { useAuthContext } from "./AuthProvider";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { Loader2 } from "lucide-react";
@@ -14,7 +14,7 @@ export default function SimpleProtectedRoute({
   children, 
   requireAdmin = false 
 }: SimpleProtectedRouteProps) {
-  const { user, loading, isAdmin } = useAuth();
+  const { user, loading, isAdmin } = useAuthContext();
   const router = useRouter();
 
   useEffect(() => {

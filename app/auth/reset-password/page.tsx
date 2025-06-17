@@ -138,17 +138,21 @@ export default function ResetPasswordPage() {
       const { error } = await supabase.auth.updateUser({ password });
 
       if (error) {
-        throw error;
+        toast.error(error.message);
+        setLoading(false);
+        return false;
       }
 
       // Mostrar toast de sucesso
-      toast.success("Password redefinida com sucesso!");
+      toast.success("Password redefinida com sucesso! A redirecionar...");
+
+      // Aguardar um pouco para o utilizador ver a mensagem
+      await new Promise(resolve => setTimeout(resolve, 2000));
 
       // IMPORTANTE: Fazer logout para forçar novo login com a nova password
       await performLogout();
 
-      // Redirecionar imediatamente para a página inicial
-      router.push("/");
+      // Nota: o performLogout já faz o redirect, por isso precisa de chamar router.push
     } catch (error: any) {
       toast.error(
         error.message || "Erro ao redefinir password. Tente novamente."

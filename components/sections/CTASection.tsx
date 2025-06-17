@@ -49,6 +49,7 @@ export default function CTASection() {
                   "Serviço ao domicílio em Vila Nova de Gaia",
                   "Lavagem ecológica com produtos de qualidade",
                   "Processo rápido e eficiente",
+                  "Emissão de fatura incluída",
                   "5ª lavagem com 50% de desconto",
                 ].map((item, index) => (
                   <li

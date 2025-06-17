@@ -1,13 +1,14 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useEffect, useRef } from "react";
 import {
   User,
   LogOut,
   Settings,
   ChevronDown,
   LayoutDashboard,
+  AlertCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,101 +16,54 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import {
-  supabase,
-  getCurrentUser,
-  User as UserType,
-  isUserAdmin,
-  performLogout,
-} from "@/lib/supabase/config";
+import { useAuthContext } from "../auth/AuthProvider";
 
 export default function ProfileDropdown() {
-  const [user, setUser] = useState<UserType | null>(null);
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [isInitialized, setIsInitialized] = useState(false);
+  const { user, loading, isAdmin, signOut, refreshUser } = useAuthContext();
+  const loadingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  const fetchUserData = async () => {
-    try {
-      // Verificar primeiro se temos uma sessão ativa
-      const { data: sessionData } = await supabase.auth.getSession();
-
-      if (!sessionData.session) {
-        setUser(null);
-        setIsAdmin(false);
-        setLoading(false);
-        return;
-      }
-
-      // Se temos sessão, procurar os dados do utilizador
-      const userData = await getCurrentUser();
-
-      if (userData) {
-        setUser(userData);
-        // Verificar se o utilizador é administrador
-        const adminStatus = await isUserAdmin(userData.id);
-        setIsAdmin(adminStatus);
-      } else {
-        setUser(null);
-        setIsAdmin(false);
-      }
-    } catch (error) {
-      console.error("Erro ao obter dados do utilizador:", error);
-      setUser(null);
-      setIsAdmin(false);
-    } finally {
-      setLoading(false);
-      setIsInitialized(true);
-    }
-  };
-
+  // Timeout de segurança para o loading do perfil
   useEffect(() => {
-    // Só executar se ainda não foi inicializado
-    if (!isInitialized) {
-      fetchUserData();
-    }
-
-    // Configurar listener para alterações de autenticação
-    const { data: authListener } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        if (event === "SIGNED_OUT") {
-          setUser(null);
-          setIsAdmin(false);
-          setLoading(false);
-        } else if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
-          // Só refetch se realmente mudou a sessão
-          if (session?.user) {
-            await fetchUserData();
-          }
-        }
+    if (loading) {
+      // Limpar timeout anterior
+      if (loadingTimeoutRef.current) {
+        clearTimeout(loadingTimeoutRef.current);
       }
-    );
+
+      // Configurar timeout de 8 segundos para o ProfileDropdown
+      loadingTimeoutRef.current = setTimeout(() => {
+        if (loading) {
+          console.warn("ProfileDropdown: Timeout de loading atingido, tentando refresh");
+          refreshUser().catch((error) => {
+            console.error("Erro ao refresh do ProfileDropdown:", error);
+          });
+        }
+      }, 8000);
+    } else {
+      // Limpar timeout se não estiver mais em loading
+      if (loadingTimeoutRef.current) {
+        clearTimeout(loadingTimeoutRef.current);
+        loadingTimeoutRef.current = null;
+      }
+    }
 
     return () => {
-      authListener?.subscription.unsubscribe();
+      if (loadingTimeoutRef.current) {
+        clearTimeout(loadingTimeoutRef.current);
+      }
     };
-  }, [isInitialized]);
-
-  const handleLogout = async () => {
-    try {
-      await performLogout();
-    } catch (error) {
-      console.error("Erro ao fazer logout:", error);
-      // Fallback: forçar refresh mesmo assim
-      window.location.href = "/";
-    }
-  };
+  }, [loading, refreshUser]);
 
   if (loading) {
     return (
       <Button
         size="sm"
         variant="outline"
-        className="flex items-center gap-2"
+        className="flex items-center gap-2 min-w-[120px]"
         disabled
       >
         <span className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-primary"></span>
-        <span className="sr-only">A carregar...</span>
+        <span className="text-sm">A carregar...</span>
       </Button>
     );
   }
@@ -179,7 +133,7 @@ export default function ProfileDropdown() {
           <Button
             variant="ghost"
             size="sm"
-            onClick={handleLogout}
+            onClick={signOut}
             className="w-full justify-start text-sm text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/50"
             tabIndex={0}
             aria-label="Terminar sessão"

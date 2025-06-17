@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { supabase } from "@/lib/supabase/config";
 import { Loader2 } from "lucide-react";
+import { useAuthContext } from "./AuthProvider";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -11,102 +11,22 @@ interface ProtectedRouteProps {
 }
 
 export default function ProtectedRoute({ children, requireAdmin = false }: ProtectedRouteProps) {
-  const [loading, setLoading] = useState(true);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(false);
+  const { user, loading, isAdmin } = useAuthContext();
   const router = useRouter();
-
-  useEffect(() => {
-    let timeoutId: NodeJS.Timeout;
-
-    const checkAuth = async () => {
-      try {
-        // Usar a mesma lógica do BookingAuthWrapper
-        const { data, error } = await supabase.auth.getSession();
-        
-        if (error) {
-          setIsAuthenticated(false);
-          setLoading(false);
-          return;
-        }
-        if (!data.session?.user) {
-          setIsAuthenticated(false);
-          setLoading(false);
-          return;
-        }
-
-        setIsAuthenticated(true);
-
-        // Se requer admin, verificar se é admin
-        if (requireAdmin) {
-          const { data: adminData } = await supabase
-            .from("admins")
-            .select("*")
-            .eq("user_id", data.session.user.id)
-            .single();
-
-          setIsAdmin(!!adminData);
-        }
-
-        setLoading(false);
-      } catch {
-        setIsAuthenticated(false);
-        setLoading(false);
-      }
-    };
-
-    // Timeout de segurança
-    timeoutId = setTimeout(() => {
-      if (loading) {
-        setLoading(false);
-      }
-    }, 10000);
-
-    checkAuth();
-
-    // Escutar mudanças de autenticação
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        if (!session) {
-          setIsAuthenticated(false);
-          setIsAdmin(false);
-        } else {
-          setIsAuthenticated(true);
-          
-          if (requireAdmin) {
-            const { data: adminData } = await supabase
-              .from("admins")
-              .select("*")
-              .eq("user_id", session.user.id)
-              .single();
-            
-            setIsAdmin(!!adminData);
-          }
-        }
-        
-        setLoading(false);
-      }
-    );
-
-    return () => {
-      clearTimeout(timeoutId);
-      subscription.unsubscribe();
-    };
-  }, [requireAdmin]);
 
   // Redirecionar se não autenticado
   useEffect(() => {
-    if (!loading && !isAuthenticated) {
+    if (!loading && !user) {
       router.push("/marcacoes");
     }
-  }, [loading, isAuthenticated, router]);
+  }, [loading, user, router]);
 
   // Redirecionar se requer admin mas não é admin
   useEffect(() => {
-    if (!loading && isAuthenticated && requireAdmin && !isAdmin) {
+    if (!loading && user && requireAdmin && !isAdmin) {
       router.push("/marcacoes");
     }
-  }, [loading, isAuthenticated, requireAdmin, isAdmin, router]);
+  }, [loading, user, requireAdmin, isAdmin, router]);
 
   if (loading) {
     return (
@@ -124,7 +44,7 @@ export default function ProtectedRoute({ children, requireAdmin = false }: Prote
     );
   }
 
-  if (!isAuthenticated) {
+  if (!user) {
     return null; // Será redirecionado
   }
 

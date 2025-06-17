@@ -1,5 +1,5 @@
 import AuthForm from "./AuthForm";
-import { AuthProvider, useAuth } from "./AuthProvider";
+import { AuthProvider, useAuthContext } from "./AuthProvider";
 import ProtectedRoute from "./ProtectedRoute";
 import SimpleProtectedRoute from "./SimpleProtectedRoute";
 import AuthVisibilityMonitor from "./AuthVisibilityMonitor";
@@ -7,7 +7,7 @@ import AuthVisibilityMonitor from "./AuthVisibilityMonitor";
 export {
   AuthForm,
   AuthProvider,
-  useAuth,
+  useAuthContext,
   ProtectedRoute,
   SimpleProtectedRoute,
   AuthVisibilityMonitor,

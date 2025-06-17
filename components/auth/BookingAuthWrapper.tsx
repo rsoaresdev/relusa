@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import { supabase, performLogout } from "@/lib/supabase/config";
 import { toast } from "sonner";
@@ -15,6 +15,8 @@ export default function BookingAuthWrapper() {
     "login" | "register" | "booking" | "dashboard"
   >("login");
   const searchParams = useSearchParams();
+  const mountedRef = useRef(true);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Função para verificar sessão quando a página volta a ficar visível
   const handleVisibilityChange = useCallback(async () => {
@@ -47,7 +49,15 @@ export default function BookingAuthWrapper() {
   }, [loading, session]);
 
   useEffect(() => {
-    let mounted = true;
+    mountedRef.current = true;
+
+    // Timeout de segurança principal - 8 segundos
+    timeoutRef.current = setTimeout(() => {
+      if (mountedRef.current && loading) {
+        console.warn("BookingAuthWrapper: Timeout de loading atingido");
+        setLoading(false);
+      }
+    }, 8000);
 
     // Verificar se há erros na URL
     const error = searchParams.get("error");
@@ -67,7 +77,7 @@ export default function BookingAuthWrapper() {
 
     // Função para verificar e processar a sessão
     const processSession = async (currentSession: any) => {
-      if (!mounted) return;
+      if (!mountedRef.current) return;
 
       if (currentSession?.user) {
         console.log(
@@ -109,11 +119,17 @@ export default function BookingAuthWrapper() {
           ]);
         }
 
-        if (mounted) {
+        if (mountedRef.current) {
           console.log("Definindo sessão e indo para dashboard");
           setSession(currentSession);
           setView("dashboard");
           setLoading(false);
+
+          // Limpar timeout de segurança
+          if (timeoutRef.current) {
+            clearTimeout(timeoutRef.current);
+            timeoutRef.current = null;
+          }
 
           // Se há tokens OAuth na URL, limpar a URL
           if (hasOAuthTokens) {
@@ -121,11 +137,17 @@ export default function BookingAuthWrapper() {
           }
         }
       } else {
-        if (mounted) {
+        if (mountedRef.current) {
           console.log("Nenhuma sessão encontrada, indo para login");
           setSession(null);
           setView("login");
           setLoading(false);
+
+          // Limpar timeout de segurança
+          if (timeoutRef.current) {
+            clearTimeout(timeoutRef.current);
+            timeoutRef.current = null;
+          }
         }
       }
     };
@@ -149,8 +171,13 @@ export default function BookingAuthWrapper() {
 
         if (error) {
           console.error("Erro ao verificar sessão:", error);
-          if (mounted) {
+          if (mountedRef.current) {
             setLoading(false);
+            // Limpar timeout de segurança
+            if (timeoutRef.current) {
+              clearTimeout(timeoutRef.current);
+              timeoutRef.current = null;
+            }
           }
           return;
         }
@@ -159,31 +186,25 @@ export default function BookingAuthWrapper() {
 
         // Se não há sessão e é a primeira tentativa, tentar novamente após um delay
         // Isso ajuda com OAuth callbacks que podem demorar a processar
-        if (!data.session && retryCount < 3 && hasOAuthTokens) {
+        if (!data.session && retryCount < 2 && hasOAuthTokens) {
           setTimeout(() => {
-            if (mounted) {
+            if (mountedRef.current) {
               checkInitialSession(retryCount + 1);
             }
-          }, 1500);
+          }, 1000);
         }
       } catch (error) {
         console.error("Erro ao verificar sessão inicial:", error);
-        if (mounted) {
+        if (mountedRef.current) {
           setLoading(false);
+          // Limpar timeout de segurança
+          if (timeoutRef.current) {
+            clearTimeout(timeoutRef.current);
+            timeoutRef.current = null;
+          }
         }
       }
     };
-
-    // Timeout de segurança
-    const safetyTimeout = setTimeout(
-      () => {
-        if (mounted && loading) {
-          console.log("Safety timeout: forçando fim do loading");
-          setLoading(false);
-        }
-      },
-      hasOAuthTokens ? 12000 : 6000
-    ); // Mais tempo se há tokens OAuth
 
     checkInitialSession();
 
@@ -192,14 +213,16 @@ export default function BookingAuthWrapper() {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log("Auth change:", event, !!session);
-      if (mounted) {
+      if (mountedRef.current) {
         await processSession(session);
       }
     });
 
     return () => {
-      mounted = false;
-      clearTimeout(safetyTimeout);
+      mountedRef.current = false;
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
       subscription.unsubscribe();
     };
   }, [searchParams]);

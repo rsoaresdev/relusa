@@ -1,224 +1,299 @@
-import { useState, useEffect, useCallback } from "react";
-import { supabase } from "@/lib/supabase/config";
-import type { User } from "@/lib/supabase/config";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { supabase, User, clearUserCache } from "@/lib/supabase/config";
+import { toast } from "sonner";
 
 interface UseAuthReturn {
   user: User | null;
   loading: boolean;
   isAdmin: boolean;
   error: string | null;
-  signOut: () => Promise<void>;
   refreshUser: () => Promise<void>;
+  signOut: () => Promise<void>;
 }
+
+// Estado global simplificado para evitar múltiplas verificações
+let globalAuthState = {
+  user: null as User | null,
+  isAdmin: false,
+  lastCheck: 0,
+  isInitializing: false,
+};
+
+const CACHE_DURATION = 30 * 1000; // 30 segundos
+const LOADING_TIMEOUT = 10 * 1000; // 10 segundos timeout máximo
 
 export const useAuth = (): UseAuthReturn => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [isInitialized, setIsInitialized] = useState(false);
 
-  const fetchUserData = useCallback(async (userId: string) => {
-    try {
-      const { data: userData, error: userError } = await supabase
-        .from("users")
-        .select("*")
-        .eq("id", userId)
-        .single();
+  const isMountedRef = useRef(true);
+  const loadingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const initializationRef = useRef(false);
 
-      if (userError) {
-        console.error("Erro ao obter dados do utilizador:", userError);
-        return null;
+  // Timeout de segurança para evitar loading infinito
+  const startLoadingTimeout = useCallback(() => {
+    if (loadingTimeoutRef.current) {
+      clearTimeout(loadingTimeoutRef.current);
+    }
+
+    loadingTimeoutRef.current = setTimeout(() => {
+      if (isMountedRef.current && loading) {
+        console.warn("Timeout de autenticação atingido, parando loading");
+        setLoading(false);
+        setError("Timeout na verificação de autenticação");
       }
+    }, LOADING_TIMEOUT);
+  }, [loading]);
 
-      // Verificar se é admin
-      const { data: adminData } = await supabase
-        .from("admins")
-        .select("*")
-        .eq("user_id", userId)
-        .single();
-
-      return {
-        user: userData as User,
-        isAdmin: !!adminData,
-      };
-    } catch (error) {
-      console.error("Erro inesperado ao obter dados do utilizador:", error);
-      return null;
+  const clearLoadingTimeout = useCallback(() => {
+    if (loadingTimeoutRef.current) {
+      clearTimeout(loadingTimeoutRef.current);
+      loadingTimeoutRef.current = null;
     }
   }, []);
 
-  const refreshUser = useCallback(async () => {
-    try {
-      setError(null);
-      const {
-        data: { session },
-        error: sessionError,
-      } = await supabase.auth.getSession();
+  const fetchUserProfile = useCallback(
+    async (
+      userId: string
+    ): Promise<{ user: User; isAdmin: boolean } | null> => {
+      try {
+        // Buscar dados do utilizador
+        const { data: userData, error: userError } = await supabase
+          .from("users")
+          .select("*")
+          .eq("id", userId)
+          .single();
 
-      if (sessionError) {
-        console.error("Erro ao obter sessão:", sessionError);
-        setError("Erro ao verificar autenticação");
+        if (userError || !userData) {
+          console.error("Erro ao obter dados do utilizador:", userError);
+          return null;
+        }
+
+        // Verificar se é admin
+        const { data: adminData } = await supabase
+          .from("admins")
+          .select("id")
+          .eq("user_id", userId)
+          .single();
+
+        return {
+          user: userData as User,
+          isAdmin: !!adminData,
+        };
+      } catch (error) {
+        console.error("Erro ao buscar perfil do utilizador:", error);
+        return null;
+      }
+    },
+    []
+  );
+
+  const updateAuthState = useCallback(
+    (newUser: User | null, newIsAdmin: boolean) => {
+      if (!isMountedRef.current) return;
+
+      setUser(newUser);
+      setIsAdmin(newIsAdmin);
+      setError(null);
+
+      // Atualizar estado global
+      globalAuthState.user = newUser;
+      globalAuthState.isAdmin = newIsAdmin;
+      globalAuthState.lastCheck = Date.now();
+    },
+    []
+  );
+
+  const validateAndLoadUser = useCallback(
+    async (forceRefresh = false) => {
+      if (!isMountedRef.current) return;
+
+      // Evitar múltiplas inicializações simultâneas
+      if (globalAuthState.isInitializing && !forceRefresh) {
         return;
       }
 
-      if (session?.user) {
-        const result = await fetchUserData(session.user.id);
-        if (result) {
-          setUser(result.user);
-          setIsAdmin(result.isAdmin);
-        } else {
-          setUser(null);
-          setIsAdmin(false);
-        }
-      } else {
-        setUser(null);
-        setIsAdmin(false);
+      // Usar cache se válido e não forçar refresh
+      const now = Date.now();
+      if (
+        !forceRefresh &&
+        globalAuthState.user &&
+        now - globalAuthState.lastCheck < CACHE_DURATION
+      ) {
+        updateAuthState(globalAuthState.user, globalAuthState.isAdmin);
+        return;
       }
-    } catch (error) {
-      console.error("Erro ao atualizar dados do utilizador:", error);
-      setError("Erro ao atualizar dados");
-    }
-  }, [fetchUserData]);
 
-  // Função para verificar sessão quando a página volta a ficar visível
-  const handleVisibilityChange = useCallback(async () => {
-    if (!document.hidden && isInitialized) {
-      // Página voltou a ficar visível, verificar se a sessão ainda é válida
-      try {
-        const {
-          data: { session },
-          error,
-        } = await supabase.auth.getSession();
-
-        if (error) {
-          console.error("Erro ao verificar sessão após visibilidade:", error);
-          return;
-        }
-
-        // Se não há sessão mas tínhamos um utilizador, limpar estado
-        if (!session && user) {
-          setUser(null);
-          setIsAdmin(false);
-          setError("Sessão expirou. Por favor, faça login novamente.");
-        }
-
-        // Se há sessão mas não temos utilizador, recarregar dados
-        if (session && !user) {
-          await refreshUser();
-        }
-      } catch (error) {
-        console.error("Erro ao processar mudança de visibilidade:", error);
-      }
-    }
-  }, [isInitialized, user, refreshUser]);
-
-  useEffect(() => {
-    let isMounted = true;
-
-    const initializeAuth = async () => {
-      if (isInitialized) return;
+      globalAuthState.isInitializing = true;
+      startLoadingTimeout();
 
       try {
         setError(null);
+
+        // Verificar sessão
         const {
           data: { session },
           error: sessionError,
         } = await supabase.auth.getSession();
 
         if (sessionError) {
-          console.error("Erro ao obter sessão inicial:", sessionError);
-          setError("Erro ao verificar autenticação");
+          console.error("Erro ao verificar sessão:", sessionError);
+          updateAuthState(null, false);
           return;
         }
 
-        if (session?.user && isMounted) {
-          const result = await fetchUserData(session.user.id);
-          if (result && isMounted) {
-            setUser(result.user);
-            setIsAdmin(result.isAdmin);
-          }
+        if (!session?.user) {
+          updateAuthState(null, false);
+          return;
+        }
+
+        // Buscar dados do utilizador
+        const userProfile = await fetchUserProfile(session.user.id);
+
+        if (userProfile) {
+          updateAuthState(userProfile.user, userProfile.isAdmin);
+        } else {
+          updateAuthState(null, false);
         }
       } catch (error) {
-        console.error("Erro ao inicializar autenticação:", error);
-        setError("Erro ao inicializar");
+        console.error("Erro na validação de utilizador:", error);
+        if (isMountedRef.current) {
+          setError("Erro ao verificar autenticação");
+          updateAuthState(null, false);
+        }
       } finally {
-        if (isMounted) {
+        globalAuthState.isInitializing = false;
+        clearLoadingTimeout();
+        if (isMountedRef.current) {
           setLoading(false);
-          setIsInitialized(true);
         }
       }
-    };
+    },
+    [
+      updateAuthState,
+      fetchUserProfile,
+      startLoadingTimeout,
+      clearLoadingTimeout,
+    ]
+  );
 
-    initializeAuth();
+  const refreshUser = useCallback(async () => {
+    if (!isMountedRef.current) return;
+    setLoading(true);
+    await validateAndLoadUser(true);
+  }, [validateAndLoadUser]);
+
+  const signOut = useCallback(async () => {
+    try {
+      // Limpar estado local e global
+      updateAuthState(null, false);
+      globalAuthState = {
+        user: null,
+        isAdmin: false,
+        lastCheck: 0,
+        isInitializing: false,
+      };
+
+      clearUserCache();
+      clearLoadingTimeout();
+
+      // Fazer logout no Supabase
+      const { error } = await supabase.auth.signOut();
+
+      if (error) {
+        console.error("Erro ao fazer logout:", error);
+      }
+
+      // Limpar localStorage
+      if (typeof window !== "undefined") {
+        try {
+          localStorage.removeItem("supabase.auth.token");
+          const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+          if (supabaseUrl) {
+            const key = `sb-${
+              supabaseUrl.split("//")[1].split(".")[0]
+            }-auth-token`;
+            localStorage.removeItem(key);
+          }
+        } catch (error) {
+          console.error("Erro ao limpar localStorage:", error);
+        }
+      }
+
+      // Redirecionar para home
+      if (typeof window !== "undefined") {
+        window.location.href = "/";
+      }
+    } catch (error) {
+      console.error("Erro inesperado no logout:", error);
+      if (typeof window !== "undefined") {
+        window.location.href = "/";
+      }
+    }
+  }, [updateAuthState, clearLoadingTimeout]);
+
+  // Inicialização do hook
+  useEffect(() => {
+    isMountedRef.current = true;
+
+    // Evitar dupla inicialização
+    if (initializationRef.current) return;
+    initializationRef.current = true;
+
+    // Inicializar autenticação
+    validateAndLoadUser();
 
     // Listener para mudanças de autenticação
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (!isMounted) return;
+      if (!isMountedRef.current) return;
 
       try {
         setError(null);
 
-        if (session?.user) {
-          const result = await fetchUserData(session.user.id);
-          if (result && isMounted) {
-            setUser(result.user);
-            setIsAdmin(result.isAdmin);
+        if (event === "SIGNED_OUT" || !session?.user) {
+          updateAuthState(null, false);
+          setLoading(false);
+        } else if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
+          // Buscar dados do utilizador
+          const userProfile = await fetchUserProfile(session.user.id);
+
+          if (userProfile && isMountedRef.current) {
+            updateAuthState(userProfile.user, userProfile.isAdmin);
+          } else if (isMountedRef.current) {
+            updateAuthState(null, false);
           }
-        } else {
-          setUser(null);
-          setIsAdmin(false);
+
+          if (isMountedRef.current) {
+            setLoading(false);
+          }
         }
       } catch (error) {
         console.error("Erro ao processar mudança de autenticação:", error);
-        setError("Erro ao processar autenticação");
-      } finally {
-        if (isMounted) {
+        if (isMountedRef.current) {
+          setError("Erro ao processar autenticação");
           setLoading(false);
         }
       }
     });
 
     return () => {
-      isMounted = false;
+      isMountedRef.current = false;
+      initializationRef.current = false;
+      clearLoadingTimeout();
       subscription.unsubscribe();
     };
-  }, [isInitialized, fetchUserData]);
-
-  // Adicionar listener para mudanças de visibilidade da página
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      document.addEventListener("visibilitychange", handleVisibilityChange);
-
-      return () => {
-        document.removeEventListener(
-          "visibilitychange",
-          handleVisibilityChange
-        );
-      };
-    }
-  }, [handleVisibilityChange]);
-
-  const signOut = useCallback(async () => {
-    try {
-      setError(null);
-      await supabase.auth.signOut();
-      setUser(null);
-      setIsAdmin(false);
-    } catch (error) {
-      console.error("Erro ao fazer logout:", error);
-      setError("Erro ao terminar sessão");
-    }
-  }, []);
+  }, []); // Dependências vazias para executar apenas uma vez
 
   return {
     user,
     loading,
     isAdmin,
     error,
-    signOut,
     refreshUser,
+    signOut,
   };
 };

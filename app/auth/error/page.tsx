@@ -28,7 +28,7 @@ export default function AuthErrorPage() {
 
             <div className="space-y-4">
               <Link
-                href="/auth/login"
+                href="/marcacoes"
                 className="w-full bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary transition-all duration-300 py-6 rounded-xl shadow-lg hover:shadow-primary/20 flex items-center justify-center text-white font-medium"
               >
                 <RefreshCw size={18} className="mr-2" />

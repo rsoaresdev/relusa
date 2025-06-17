@@ -94,8 +94,8 @@ export default function MarcacoesPage() {
                   Agende a Sua Lavagem
                 </h2>
                 <p className="text-gray-600 dark:text-gray-400 text-center mb-8">
-                  Para agendar, faça login ou crie uma conta. Acumule pontos e
-                  ganhe 50% de desconto na 5ª lavagem!
+                  Para agendar, faça login ou crie uma conta. As marcações são realizadas exclusivamente através do website. 
+                  Acumule pontos e ganhe 50% de desconto na 5ª lavagem!
                 </p>
 
                 {/* Componente de autenticação e formulário de marcação */}
@@ -104,8 +104,11 @@ export default function MarcacoesPage() {
                 <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
                   <div className="text-center">
                     <h3 className="font-medium text-gray-900 dark:text-white mb-4">
-                      Prefere agendar por outro meio?
+                      Para outras questões, contacte-nos
                     </h3>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                      Atenção: As marcações só podem ser feitas através do website após login
+                    </p>
                     <div className="flex flex-col sm:flex-row justify-center gap-4">
                       <Button variant="outline" asChild>
                         <Link href="mailto:geral@relusa.pt" className="gap-2">
@@ -199,6 +202,11 @@ export default function MarcacoesPage() {
                     "Será necessário ligar o veículo ou utilizar a entrada de 12v?",
                   answer:
                     "Não, não será necessário ligar o veículo ou utilizar a entrada de 12v.",
+                },
+                {
+                  question: "Emitem fatura?",
+                  answer:
+                    "Sim, emitimos fatura para todos os nossos serviços, garantindo máxima transparência e credibilidade profissional.",
                 },
               ].map((item, index) => (
                 <div

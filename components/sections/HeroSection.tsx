@@ -10,6 +10,7 @@ import {
   Clock,
   CalendarCheck,
   Award,
+  Receipt,
 } from "lucide-react";
 
 export default function HeroSection() {
@@ -65,7 +66,7 @@ export default function HeroSection() {
               </Button>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-4">
               {[
                 {
                   icon: <Droplets className="text-primary" size={24} />,
@@ -81,6 +82,11 @@ export default function HeroSection() {
                   icon: <Award className="text-primary" size={24} />,
                   title: "Qualidade",
                   description: "Só usamos produtos premium de alta qualidade",
+                },
+                {
+                  icon: <Receipt className="text-primary" size={24} />,
+                  title: "Fatura",
+                  description: "Emitimos fatura para todos os serviços",
                 },
               ].map((feature, index) => (
                 <div

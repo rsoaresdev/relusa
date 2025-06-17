@@ -32,7 +32,7 @@ export default function AuthCodeError() {
           </p>
           <div className="space-y-3">
             <Button asChild className="w-full">
-              <Link href="/auth/login">Tentar Novamente</Link>
+              <Link href="/marcacoes">Tentar Novamente</Link>
             </Button>
             <Button asChild variant="outline" className="w-full">
               <Link href="/">Voltar para a Página Inicial</Link>

@@ -347,6 +347,12 @@ export default function TermosPage() {
                   </h3>
                   <ul className="pl-6 mb-4">
                     <li>
+                      <strong>As marcações são realizadas exclusivamente através do website</strong> após criar conta e fazer login
+                    </li>
+                    <li>
+                      Não aceitamos marcações por telefone, email ou redes sociais
+                    </li>
+                    <li>
                       Agendamentos podem ser feitos com até 30 dias de
                       antecedência
                     </li>
@@ -436,6 +442,9 @@ export default function TermosPage() {
                   </ul>
                   <p className="mt-4">Notas importantes sobre pagamentos:</p>
                   <ul className="pl-6">
+                    <li>
+                      <strong>Emitimos fatura para todos os serviços prestados</strong>
+                    </li>
                     <li>
                       Serviços adicionais serão orçamentados separadamente
                     </li>
