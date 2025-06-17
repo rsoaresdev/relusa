@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase, User, clearUserCache } from "@/lib/supabase/config";
-import { toast } from "sonner";
 
 interface UseAuthReturn {
   user: User | null;

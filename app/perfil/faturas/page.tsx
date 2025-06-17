@@ -12,7 +12,6 @@ import {
   Car,
   MapPin,
   Clock,
-  Euro,
   Loader2,
   AlertCircle,
 } from "lucide-react";
@@ -20,7 +19,6 @@ import { format, parseISO } from "date-fns";
 import { pt } from "date-fns/locale";
 import { toast } from "sonner";
 import {
-  supabase,
   getUserBookings,
   getUserInvoices,
   getInvoiceSignedUrl,

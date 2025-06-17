@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Booking, supabase } from "@/lib/supabase/config";
+import { Booking, Invoice } from "@/lib/supabase/config";
 import { format, parseISO, differenceInMinutes } from "date-fns";
 import { pt } from "date-fns/locale";
 import {
@@ -14,20 +14,12 @@ import {
   CheckCircle,
   XCircle,
   Loader2,
-  Play,
-  CheckSquare,
   User,
   CalendarClock,
   FileText,
   Upload,
+  Download,
 } from "lucide-react";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import {
   Card,
   CardContent,
@@ -42,6 +34,7 @@ interface AdminBookingCardProps {
     user_name?: string;
     user_email?: string;
   };
+  invoice?: Invoice;
   onStatusChange: (
     bookingId: string,
     status: string,
@@ -57,12 +50,23 @@ interface AdminBookingCardProps {
     newCustomTime?: string,
     oldCustomTime?: string
   ) => Promise<boolean>;
+  onDownloadInvoice?: (
+    invoiceId: string,
+    fileName: string,
+    filePath: string
+  ) => void;
+  downloadingInvoice?: string | null;
+  onInvoiceUploaded?: () => void;
 }
 
 export default function AdminBookingCard({
   booking,
+  invoice,
   onStatusChange,
   onReschedule,
+  onDownloadInvoice,
+  downloadingInvoice,
+  onInvoiceUploaded,
 }: AdminBookingCardProps) {
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState<
@@ -71,38 +75,37 @@ export default function AdminBookingCard({
   const [currentBooking, setCurrentBooking] = useState(booking);
   const [rescheduleDialogOpen, setRescheduleDialogOpen] = useState(false);
   const [invoiceUploadOpen, setInvoiceUploadOpen] = useState(false);
-  const [hasInvoice, setHasInvoice] = useState(false);
-  const [checkingInvoice, setCheckingInvoice] = useState(false);
-
-  // Verificar se já existe fatura para esta marcação
-  useEffect(() => {
-    const checkExistingInvoice = async () => {
-      if (booking.status === "completed") {
-        setCheckingInvoice(true);
-        try {
-          const { data, error } = await supabase
-            .from("invoices")
-            .select("id")
-            .eq("booking_id", booking.id)
-            .single();
-
-          if (!error && data) {
-            setHasInvoice(true);
-          }
-        } catch (error) {
-          // Ignorar erros - pode não ter fatura ainda
-        } finally {
-          setCheckingInvoice(false);
-        }
-      }
-    };
-
-    checkExistingInvoice();
-  }, [booking.id, booking.status]);
-
   // Função para lidar com o sucesso do upload da fatura
   const handleInvoiceUploadSuccess = () => {
-    setHasInvoice(true);
+    // Refresh será feito pelo componente pai
+    onInvoiceUploaded?.();
+  };
+
+  // Função para obter ações permitidas baseadas no status atual
+  const getAvailableActions = (currentStatus: string) => {
+    switch (currentStatus) {
+      case "pending":
+        return ["approved", "rejected"];
+      case "approved":
+        return ["started", "rejected"];
+      case "started":
+        return ["completed"];
+      case "rejected":
+      case "completed":
+        return []; // Estados finais
+      default:
+        return [];
+    }
+  };
+
+  // Função para verificar se pode reagendar
+  const canReschedule = () => {
+    return ["pending", "approved"].includes(status);
+  };
+
+  // Função para verificar se pode anexar/descarregar fatura
+  const canManageInvoice = () => {
+    return status === "completed";
   };
 
   // Função para formatar a data
@@ -311,224 +314,364 @@ export default function AdminBookingCard({
 
   return (
     <Card
-      className={`overflow-hidden border-l-4 ${statusInfo.color.replace(
+      className={`overflow-hidden border-l-4 shadow-md hover:shadow-lg transition-shadow ${statusInfo.color.replace(
         "bg-",
         "border-"
       )}`}
     >
-      <CardHeader className="bg-gray-50 dark:bg-gray-800/50 pb-2 pt-4 px-6">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
-          <div className="flex items-center mb-2 md:mb-0">
+      {/* Cabeçalho com informação principal */}
+      <CardHeader className="bg-gradient-to-r from-gray-50 to-white dark:from-gray-800 dark:to-gray-700 p-6">
+        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+          <div className="flex items-center space-x-4">
             <div
-              className={`px-3 py-1 rounded-full text-xs font-medium flex items-center ${statusInfo.color} border`}
+              className={`px-4 py-2 rounded-lg text-sm font-semibold flex items-center ${statusInfo.color} border shadow-sm`}
             >
               {statusInfo.icon}
               {statusInfo.text}
             </div>
-            <span className="ml-2 text-sm text-gray-500 dark:text-gray-400">
-              #{booking.id.substring(0, 8)}
-            </span>
+            <div className="text-sm text-gray-500 dark:text-gray-400">
+              <span className="font-mono">#{booking.id.substring(0, 8)}</span>
+            </div>
           </div>
-          <div className="text-lg font-bold text-primary">{getPrice()}</div>
+          <div className="flex items-center space-x-4">
+            {booking.nif && (
+              <span className="text-xs bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300 px-3 py-1 rounded-full font-medium">
+                NIF: {booking.nif}
+              </span>
+            )}
+            <div className="text-2xl font-bold text-primary">{getPrice()}</div>
+          </div>
         </div>
-        <h4 className="text-lg font-medium text-gray-900 dark:text-white mt-2">
+        <h4 className="text-xl font-semibold text-gray-900 dark:text-white mt-2">
           {getServiceType()}
         </h4>
       </CardHeader>
 
       <CardContent className="p-6">
-        <div className="space-y-4">
-          <div className="flex items-start">
-            <User size={18} className="text-primary mt-0.5 flex-shrink-0" />
-            <div className="ml-2">
-              <p className="text-gray-700 dark:text-gray-300">
-                {currentBooking.user_name || "Cliente"}
-              </p>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                {currentBooking.user_email || "Email não disponível"}
-              </p>
-            </div>
-          </div>
+        {/* Layout em grid para melhor organização */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+          {/* Coluna 1: Informações do Cliente */}
+          <div className="space-y-4">
+            <h5 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide border-b pb-2">
+              👤 Cliente
+            </h5>
 
-          <div className="flex items-start">
-            <Calendar size={18} className="text-primary mt-0.5 flex-shrink-0" />
-            <div className="ml-2">
-              <p className="text-gray-700 dark:text-gray-300">
-                {formatDate(booking.date)}
-              </p>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                {getTimeSlot()}
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-start">
-            <Car size={18} className="text-primary mt-0.5 flex-shrink-0" />
-            <div className="ml-2">
-              <p className="text-gray-700 dark:text-gray-300">
-                {booking.car_model}
-              </p>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                Matrícula: {booking.car_plate}
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-start">
-            <MapPin size={18} className="text-primary mt-0.5 flex-shrink-0" />
-            <p className="ml-2 text-gray-700 dark:text-gray-300">
-              {booking.address}
-            </p>
-          </div>
-
-          {(currentBooking.start_time || currentBooking.end_time) && (
-            <div className="flex items-start">
-              <Clock size={18} className="text-primary mt-0.5 flex-shrink-0" />
-              <div className="ml-2">
-                {currentBooking.start_time && (
-                  <p className="text-sm text-gray-700 dark:text-gray-300">
-                    <span className="font-medium">Início:</span>{" "}
-                    {formatTimestamp(currentBooking.start_time)}
+            <div className="space-y-3">
+              <div className="flex items-start space-x-3">
+                <User size={16} className="text-primary mt-0.5 flex-shrink-0" />
+                <div>
+                  <p className="font-medium text-gray-900 dark:text-white">
+                    {currentBooking.user_name || "Cliente"}
                   </p>
-                )}
-                {currentBooking.end_time && (
-                  <p className="text-sm text-gray-700 dark:text-gray-300">
-                    <span className="font-medium">Fim:</span>{" "}
-                    {formatTimestamp(currentBooking.end_time)}
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    {currentBooking.user_email || "Email não disponível"}
                   </p>
-                )}
-                {currentBooking.start_time && currentBooking.end_time && (
-                  <p className="text-sm text-gray-700 dark:text-gray-300">
-                    <span className="font-medium">Duração:</span>{" "}
-                    {calculateDuration(
-                      currentBooking.start_time,
-                      currentBooking.end_time
+                </div>
+              </div>
+
+              <div className="flex items-start space-x-3">
+                <Car size={16} className="text-primary mt-0.5 flex-shrink-0" />
+                <div>
+                  <p className="font-medium text-gray-900 dark:text-white">
+                    {booking.car_model}
+                  </p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    {booking.car_plate}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Coluna 2: Agendamento e Localização */}
+          <div className="space-y-4">
+            <h5 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide border-b pb-2">
+              📅 Agendamento
+            </h5>
+
+            <div className="space-y-3">
+              <div className="flex items-start space-x-3">
+                <Calendar
+                  size={16}
+                  className="text-primary mt-0.5 flex-shrink-0"
+                />
+                <div>
+                  <p className="font-medium text-gray-900 dark:text-white">
+                    {formatDate(booking.date)}
+                  </p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    {getTimeSlot()}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-start space-x-3">
+                <MapPin
+                  size={16}
+                  className="text-primary mt-0.5 flex-shrink-0"
+                />
+                <div>
+                  <p className="text-sm text-gray-900 dark:text-white break-words">
+                    {booking.address}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Coluna 3: Execução e Extras */}
+          <div className="space-y-4 lg:col-span-2 xl:col-span-1">
+            <h5 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide border-b pb-2">
+              ⚙️ Execução
+            </h5>
+
+            <div className="space-y-3">
+              {(currentBooking.start_time || currentBooking.end_time) && (
+                <div className="flex items-start space-x-3">
+                  <Clock
+                    size={16}
+                    className="text-primary mt-0.5 flex-shrink-0"
+                  />
+                  <div className="space-y-1">
+                    {currentBooking.start_time && (
+                      <p className="text-sm text-gray-900 dark:text-white">
+                        <span className="font-medium">Início:</span>{" "}
+                        {formatTimestamp(currentBooking.start_time)}
+                      </p>
                     )}
+                    {currentBooking.end_time && (
+                      <p className="text-sm text-gray-900 dark:text-white">
+                        <span className="font-medium">Fim:</span>{" "}
+                        {formatTimestamp(currentBooking.end_time)}
+                      </p>
+                    )}
+                    {currentBooking.start_time && currentBooking.end_time && (
+                      <p className="text-sm text-primary font-medium">
+                        Duração:{" "}
+                        {calculateDuration(
+                          currentBooking.start_time,
+                          currentBooking.end_time
+                        )}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {booking.notes && (
+                <div className="bg-amber-50 dark:bg-amber-900/20 p-3 rounded-lg border border-amber-200 dark:border-amber-800">
+                  <p className="text-sm text-amber-800 dark:text-amber-200">
+                    <span className="font-semibold">📝 Notas:</span>{" "}
+                    {booking.notes}
                   </p>
+                </div>
+              )}
+
+              {!currentBooking.start_time &&
+                !currentBooking.end_time &&
+                !booking.notes && (
+                  <div className="text-center py-4">
+                    <p className="text-sm text-gray-500 dark:text-gray-400 italic">
+                      Sem informações de execução
+                    </p>
+                  </div>
                 )}
+            </div>
+          </div>
+        </div>
+      </CardContent>
+
+      {/* Controlos e Ações */}
+      <CardFooter className="bg-gray-50 dark:bg-gray-800/50 p-6">
+        <div className="w-full space-y-4">
+          {/* Ações principais baseadas no status */}
+          {getAvailableActions(status).length > 0 && (
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-primary rounded-full"></div>
+                <span className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
+                  Ações Disponíveis
+                </span>
+              </div>
+              <div className="flex flex-wrap gap-3">
+                {getAvailableActions(status).map((action) => {
+                  const actionConfig = {
+                    approved: {
+                      label: "✅ Aprovar Marcação",
+                      variant: "default" as const,
+                      className:
+                        "bg-blue-600 hover:bg-blue-700 text-white shadow-sm",
+                    },
+                    rejected: {
+                      label: "❌ Rejeitar Marcação",
+                      variant: "destructive" as const,
+                      className: "shadow-sm",
+                    },
+                    started: {
+                      label: "🚗 Iniciar Serviço",
+                      variant: "default" as const,
+                      className:
+                        "bg-purple-600 hover:bg-purple-700 text-white shadow-sm",
+                    },
+                    completed: {
+                      label: "🏁 Concluir Serviço",
+                      variant: "default" as const,
+                      className:
+                        "bg-green-600 hover:bg-green-700 text-white shadow-sm",
+                    },
+                  };
+
+                  const config =
+                    actionConfig[action as keyof typeof actionConfig];
+
+                  return (
+                    <Button
+                      key={action}
+                      variant={config.variant}
+                      size="default"
+                      onClick={() => handleStatusChange(action as any)}
+                      disabled={loading}
+                      className={`flex items-center gap-2 px-4 py-2 font-medium ${config.className}`}
+                    >
+                      {loading ? (
+                        <Loader2 size={16} className="animate-spin" />
+                      ) : null}
+                      {config.label}
+                    </Button>
+                  );
+                })}
               </div>
             </div>
           )}
 
-          {booking.notes && (
-            <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                <span className="font-medium">Notas:</span> {booking.notes}
-              </p>
-            </div>
-          )}
-        </div>
-      </CardContent>
+          {/* Barra de separação quando há ações principais e secundárias */}
+          {getAvailableActions(status).length > 0 &&
+            onReschedule &&
+            canReschedule() && (
+              <div className="border-t border-gray-200 dark:border-gray-600"></div>
+            )}
 
-      {/* Controlos de status */}
-      <CardFooter className="p-6 pt-0">
-        <div className="flex flex-col w-full gap-4">
-          {/* Status controls */}
-          <div className="flex flex-col sm:flex-row gap-3">
-            <div className="flex-1">
-              <Select
-                value={status}
-                onValueChange={(value) =>
-                  handleStatusChange(
-                    value as
-                      | "completed"
-                      | "pending"
-                      | "approved"
-                      | "rejected"
-                      | "started"
-                  )
-                }
-                disabled={loading}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="pending">
-                    <div className="flex items-center">
-                      <AlertCircle size={16} className="mr-2 text-yellow-600" />
-                      Pendente
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="approved">
-                    <div className="flex items-center">
-                      <CheckCircle size={16} className="mr-2 text-blue-600" />
-                      Aprovada
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="rejected">
-                    <div className="flex items-center">
-                      <XCircle size={16} className="mr-2 text-red-600" />
-                      Rejeitada
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="started">
-                    <div className="flex items-center">
-                      <Play size={16} className="mr-2 text-purple-600" />
-                      Iniciar Serviço
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="completed">
-                    <div className="flex items-center">
-                      <CheckSquare size={16} className="mr-2 text-green-600" />
-                      Concluir Serviço
-                    </div>
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Reschedule button - only show for pending and approved bookings */}
-            {onReschedule &&
-              (status === "pending" || status === "approved") && (
+          {/* Ações secundárias e informações */}
+          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+            {/* Ações secundárias */}
+            <div className="flex flex-wrap gap-2">
+              {onReschedule && canReschedule() && (
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => setRescheduleDialogOpen(true)}
                   disabled={loading}
-                  className="flex items-center gap-2"
+                  className="flex items-center gap-2 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200"
                 >
                   <CalendarClock size={16} />
                   Reagendar
                 </Button>
               )}
+            </div>
+
+            {/* Informação de loading */}
+            {loading && (
+              <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                <Loader2 size={16} className="animate-spin" />
+                <span>A processar...</span>
+              </div>
+            )}
           </div>
 
-          {/* Invoice upload button - only show for completed bookings */}
-          {status === "completed" && (
-            <div className="flex items-center justify-between pt-2 border-t border-gray-200 dark:border-gray-700">
-              <div className="flex items-center gap-2">
-                <FileText size={16} className="text-gray-500" />
-                <span className="text-sm text-gray-600 dark:text-gray-400">
-                  {hasInvoice ? "Fatura anexada" : "Sem fatura"}
-                </span>
-              </div>
-              {!hasInvoice && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setInvoiceUploadOpen(true)}
-                  disabled={loading || checkingInvoice}
-                  className="flex items-center gap-2"
-                >
-                  {checkingInvoice ? (
-                    <Loader2 size={16} className="animate-spin" />
-                  ) : (
-                    <Upload size={16} />
-                  )}
-                  Anexar Fatura
-                </Button>
-              )}
-            </div>
-          )}
+          {/* Gestão de faturas - apenas para serviços concluídos */}
+          {canManageInvoice() && (
+            <>
+              <div className="border-t border-gray-200 dark:border-gray-600"></div>
+              <div className="space-y-4">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                  <span className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
+                    Gestão de Fatura
+                  </span>
+                  <div className="flex-1 border-t border-gray-200 dark:border-gray-600 ml-4"></div>
+                  <span className="text-xs px-2 py-1 rounded-full bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300">
+                    {invoice ? "✅ Disponível" : "⏳ Pendente"}
+                  </span>
+                </div>
 
-          {loading && (
-            <div className="flex items-center justify-center py-2">
-              <Loader2 size={16} className="animate-spin mr-2" />
-              <span className="text-sm text-gray-600 dark:text-gray-400">
-                A processar...
-              </span>
-            </div>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  {/* Informações da fatura */}
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 text-sm">
+                      <FileText size={14} className="text-purple-500" />
+                      <span className="font-medium text-gray-700 dark:text-gray-300">
+                        Status da Fatura:
+                      </span>
+                      <span
+                        className={`font-semibold ${
+                          invoice ? "text-green-600" : "text-amber-600"
+                        }`}
+                      >
+                        {invoice ? "Fatura anexada" : "Aguarda processamento"}
+                      </span>
+                    </div>
+
+                    {invoice && (
+                      <div className="text-xs text-gray-500 dark:text-gray-400 ml-6">
+                        Criada em:{" "}
+                        {format(
+                          parseISO(invoice.created_at),
+                          "dd/MM/yyyy 'às' HH:mm",
+                          {
+                            locale: pt,
+                          }
+                        )}
+                      </div>
+                    )}
+
+                    {!invoice && booking.nif && (
+                      <div className="text-xs text-blue-600 dark:text-blue-400 ml-6">
+                        NIF fornecido: {booking.nif}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Ações de fatura */}
+                  <div className="flex justify-end items-center gap-2">
+                    {invoice && onDownloadInvoice && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() =>
+                          onDownloadInvoice(
+                            invoice.id,
+                            invoice.file_name,
+                            invoice.file_path
+                          )
+                        }
+                        disabled={downloadingInvoice === invoice.id}
+                        className="flex items-center gap-2 hover:bg-green-50 hover:text-green-600 hover:border-green-200"
+                      >
+                        {downloadingInvoice === invoice.id ? (
+                          <Loader2 size={16} className="animate-spin" />
+                        ) : (
+                          <Download size={16} />
+                        )}
+                        Descarregar
+                      </Button>
+                    )}
+
+                    {!invoice && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setInvoiceUploadOpen(true)}
+                        disabled={loading}
+                        className="flex items-center gap-2 bg-purple-50 hover:bg-purple-100 text-purple-700 border-purple-200 hover:border-purple-300"
+                      >
+                        <Upload size={16} />
+                        Anexar Fatura
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </>
           )}
         </div>
       </CardFooter>
