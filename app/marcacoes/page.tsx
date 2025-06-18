@@ -20,26 +20,26 @@ export const metadata = {
 
 export default function MarcacoesPage() {
   return (
-    <div className="pt-24 pb-16">
-      {/* Header */}
-      <section className="bg-primary/5 py-16">
-        <div className="container mx-auto px-4">
-          <div className="max-w-3xl mx-auto text-center">
-            <h1 className="text-4xl md:text-5xl font-bold font-poppins mb-6 text-gray-900 dark:text-white">
+    <div className="pt-24 pb-16 min-h-screen">
+      {/* Header Section */}
+      <section className="bg-muted/30 py-20">
+        <div className="container mx-auto px-6">
+          <div className="max-w-4xl mx-auto text-center">
+            <h1 className="text-4xl md:text-5xl font-bold mb-6">
               Marcações <span className="text-primary">Online</span>
             </h1>
-            <p className="text-xl text-gray-600 dark:text-gray-400">
+            <p className="text-xl text-muted-foreground leading-relaxed">
               Agende a sua lavagem de forma rápida e simples.
             </p>
           </div>
         </div>
       </section>
 
-      {/* Benefits */}
-      <section className="py-12">
-        <div className="container mx-auto px-4">
-          <div className="max-w-5xl mx-auto">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      {/* Benefits Section */}
+      <section className="py-16">
+        <div className="container mx-auto px-6">
+          <div className="max-w-6xl mx-auto">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
               {[
                 {
                   icon: <Calendar className="text-primary" size={24} />,
@@ -66,17 +66,19 @@ export default function MarcacoesPage() {
               ].map((item, index) => (
                 <div
                   key={index}
-                  className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md border border-gray-100 dark:border-gray-700"
+                  className="group p-8 rounded-2xl bg-card border border-border/50 hover:border-border shadow-sm hover:shadow-md transition-all duration-300"
                 >
-                  <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-                    {item.icon}
+                  <div className="space-y-4">
+                    <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-primary/15 transition-colors">
+                      {item.icon}
+                    </div>
+                    <h3 className="text-lg font-semibold text-foreground">
+                      {item.title}
+                    </h3>
+                    <p className="text-sm text-muted-foreground leading-relaxed">
+                      {item.description}
+                    </p>
                   </div>
-                  <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-                    {item.title}
-                  </h3>
-                  <p className="text-gray-600 dark:text-gray-400 text-sm">
-                    {item.description}
-                  </p>
                 </div>
               ))}
             </div>
@@ -84,70 +86,82 @@ export default function MarcacoesPage() {
         </div>
       </section>
 
-      {/* Booking Form */}
-      <section className="py-16">
-        <div className="container mx-auto px-4">
+      {/* Booking Form Section */}
+      <section className="py-16 bg-muted/20">
+        <div className="container mx-auto px-6">
           <div className="max-w-4xl mx-auto">
-            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden">
+            <div className="bg-card rounded-2xl border border-border/50 shadow-sm overflow-hidden">
               <div className="p-8 md:p-12">
-                <h2 className="text-2xl md:text-3xl font-bold font-poppins mb-6 text-gray-900 dark:text-white text-center">
-                  Agende a Sua Lavagem
-                </h2>
-                <p className="text-gray-600 dark:text-gray-400 text-center mb-8">
-                  Para agendar, faça login ou crie uma conta. As marcações são realizadas exclusivamente através do website. 
-                  Acumule pontos e ganhe 50% de desconto na 5ª lavagem!
-                </p>
+                <div className="text-center mb-8">
+                  <h2 className="text-2xl md:text-3xl font-bold mb-4">
+                    Agende a Sua Lavagem
+                  </h2>
+                  <p className="text-muted-foreground leading-relaxed max-w-2xl mx-auto">
+                    Para agendar, faça login ou crie uma conta. As marcações são
+                    realizadas exclusivamente através do website. Acumule pontos
+                    e ganhe 50% de desconto na 5ª lavagem!
+                  </p>
+                </div>
 
-                {/* Componente de autenticação e formulário de marcação */}
+                {/* Auth & Booking Form Component */}
                 <BookingAuthWrapperSuspense />
 
-                <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
-                  <div className="text-center">
-                    <h3 className="font-medium text-gray-900 dark:text-white mb-4">
-                      Para outras questões, contacte-nos
-                    </h3>
-                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
-                      Atenção: As marcações só podem ser feitas através do website após login
-                    </p>
-                    <div className="flex flex-col sm:flex-row justify-center gap-4">
-                      <Button variant="outline" asChild>
-                        <Link href="mailto:geral@relusa.pt" className="gap-2">
-                          <Mail className="w-4 h-4" />
-                          Email
-                        </Link>
-                      </Button>
-                      <Button variant="outline" asChild>
-                        <Link
-                          href="https://instagram.com/relusa.pt"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="gap-2"
+                {/* Contact Options */}
+                <div className="mt-12 pt-8 border-t border-border/50">
+                  <div className="text-center space-y-6">
+                    <div>
+                      <h3 className="font-semibold text-foreground mb-2">
+                        Para outras questões, contacte-nos
+                      </h3>
+                      <p className="text-sm text-muted-foreground">
+                        Atenção: As marcações só podem ser feitas através do
+                        website após login
+                      </p>
+                    </div>
+
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      {[
+                        {
+                          href: "mailto:geral@relusa.pt",
+                          icon: <Mail className="w-4 h-4" />,
+                          label: "Email",
+                        },
+                        {
+                          href: "https://instagram.com/relusa.pt",
+                          icon: <Instagram className="w-4 h-4" />,
+                          label: "Instagram",
+                          external: true,
+                        },
+                        {
+                          href: "tel:+351932440827",
+                          icon: <Phone className="w-4 h-4" />,
+                          label: "Chamada",
+                        },
+                        {
+                          href: "/contactos",
+                          icon: <UserRoundPen className="w-4 h-4" />,
+                          label: "Formulário",
+                        },
+                      ].map((contact, index) => (
+                        <Button
+                          key={index}
+                          variant="outline"
+                          asChild
+                          className="h-12"
                         >
-                          <Instagram className="w-4 h-4" />
-                          Instagram
-                        </Link>
-                      </Button>
-                      <Button variant="outline" asChild>
-                        <Link
-                          href="tel:+351932440827"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="gap-2"
-                        >
-                          <Phone className="w-4 h-4" />
-                          Chamada
-                        </Link>
-                      </Button>
-                      <Button variant="outline" asChild>
-                        <Link
-                          href="/contactos"
-                          rel="noopener noreferrer"
-                          className="gap-2"
-                        >
-                          <UserRoundPen className="w-4 h-4" />
-                          Formulário de contacto
-                        </Link>
-                      </Button>
+                          <Link
+                            href={contact.href}
+                            {...(contact.external && {
+                              target: "_blank",
+                              rel: "noopener noreferrer",
+                            })}
+                            className="gap-2 flex-col h-auto py-3"
+                          >
+                            {contact.icon}
+                            <span className="text-xs">{contact.label}</span>
+                          </Link>
+                        </Button>
+                      ))}
                     </div>
                   </div>
                 </div>
@@ -157,13 +171,15 @@ export default function MarcacoesPage() {
         </div>
       </section>
 
-      {/* FAQ */}
-      <section className="py-16 bg-gray-50 dark:bg-gray-900">
-        <div className="container mx-auto px-4">
-          <div className="max-w-3xl mx-auto">
-            <h2 className="text-2xl md:text-3xl font-bold font-poppins mb-12 text-gray-900 dark:text-white text-center">
-              Perguntas Frequentes
-            </h2>
+      {/* FAQ Section */}
+      <section className="py-20">
+        <div className="container mx-auto px-6">
+          <div className="max-w-4xl mx-auto">
+            <div className="text-center mb-16">
+              <h2 className="text-2xl md:text-3xl font-bold mb-4">
+                Perguntas Frequentes
+              </h2>
+            </div>
 
             <div className="space-y-6">
               {[
@@ -197,27 +213,16 @@ export default function MarcacoesPage() {
                   answer:
                     "De modo a poder realizar a limpeza interior, o cliente deverá fornecer a chave do veículo no inicio do serviço, e a mesma será devolvida no ato do pagamento.",
                 },
-                {
-                  question:
-                    "Será necessário ligar o veículo ou utilizar a entrada de 12v?",
-                  answer:
-                    "Não, não será necessário ligar o veículo ou utilizar a entrada de 12v.",
-                },
-                {
-                  question: "Emitem fatura?",
-                  answer:
-                    "Sim, emitimos fatura para todos os nossos serviços, garantindo máxima transparência e credibilidade profissional.",
-                },
-              ].map((item, index) => (
+              ].map((faq, index) => (
                 <div
                   key={index}
-                  className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-md"
+                  className="p-6 rounded-xl bg-card border border-border/50 hover:border-border transition-colors"
                 >
-                  <h3 className="font-medium text-gray-900 dark:text-white mb-2">
-                    {item.question}
+                  <h3 className="font-semibold text-foreground mb-3">
+                    {faq.question}
                   </h3>
-                  <p className="text-gray-600 dark:text-gray-400">
-                    {item.answer}
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    {faq.answer}
                   </p>
                 </div>
               ))}

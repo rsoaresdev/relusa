@@ -91,7 +91,7 @@ export default function TestimonialsSection() {
 
   // Autoplay dos testemunhos
   useEffect(() => {
-    if (autoplay) {
+    if (autoplay && testimonials.length > 1) {
       autoplayRef.current = setInterval(() => {
         setCurrentIndex((prev) => (prev + 1) % testimonials.length);
       }, 5000);
@@ -124,13 +124,13 @@ export default function TestimonialsSection() {
   };
 
   return (
-    <section id="testimonials" className="py-20 bg-white dark:bg-gray-900">
-      <div className="container mx-auto px-4">
-        <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-4xl font-bold font-poppins mb-4 text-gray-900 dark:text-white">
+    <section id="testimonials" className="py-24 bg-background">
+      <div className="container mx-auto px-6">
+        <div className="text-center mb-16 max-w-3xl mx-auto">
+          <h2 className="text-3xl md:text-4xl font-bold mb-4">
             O Que <span className="text-primary">Dizem</span> Os Nossos Clientes
           </h2>
-          <p className="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
+          <p className="text-lg text-muted-foreground leading-relaxed">
             A satisfação dos nossos clientes é a nossa maior recompensa. Veja o
             que dizem sobre o nosso serviço.
           </p>
@@ -140,17 +140,17 @@ export default function TestimonialsSection() {
         <div className="max-w-4xl mx-auto relative">
           {/* Main Testimonial */}
           <div
-            className={`bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-8 transition-all duration-700 ${
+            className={`bg-card border border-border/50 rounded-2xl shadow-sm p-8 md:p-12 transition-all duration-700 ${
               isVisible ? "opacity-100 scale-100" : "opacity-0 scale-95"
             }`}
           >
-            <div className="absolute top-6 right-8 text-primary/20">
-              <Quote size={60} />
+            <div className="absolute top-8 right-8 text-primary/10">
+              <Quote size={48} />
             </div>
 
-            <div className="flex flex-col md:flex-row gap-6 items-start">
+            <div className="flex flex-col md:flex-row gap-8 items-start">
               <div className="flex-shrink-0">
-                <div className="relative w-20 h-20 rounded-full overflow-hidden border-4 border-primary/20">
+                <div className="relative w-24 h-24 rounded-2xl overflow-hidden border border-border/50">
                   <Image
                     src={testimonials[currentIndex].avatar}
                     alt={testimonials[currentIndex].name}
@@ -160,8 +160,8 @@ export default function TestimonialsSection() {
                 </div>
               </div>
 
-              <div className="flex-1">
-                <div className="flex items-center mb-2">
+              <div className="flex-1 space-y-6">
+                <div className="flex items-center space-x-1">
                   {[...Array(5)].map((_, i) => (
                     <Star
                       key={i}
@@ -169,21 +169,21 @@ export default function TestimonialsSection() {
                       className={`${
                         i < testimonials[currentIndex].rating
                           ? "text-yellow-400 fill-yellow-400"
-                          : "text-gray-300"
+                          : "text-muted-foreground/30"
                       }`}
                     />
                   ))}
                 </div>
 
-                <p className="text-gray-700 dark:text-gray-300 mb-6 text-lg italic">
+                <blockquote className="text-foreground text-lg leading-relaxed">
                   &quot;{testimonials[currentIndex].text}&quot;
-                </p>
+                </blockquote>
 
-                <div>
-                  <h4 className="font-bold text-gray-900 dark:text-white">
+                <div className="space-y-1">
+                  <h4 className="font-semibold text-foreground">
                     {testimonials[currentIndex].name}
                   </h4>
-                  <div className="flex items-center text-sm text-gray-500 dark:text-gray-400">
+                  <div className="flex items-center text-sm text-muted-foreground">
                     <span>{testimonials[currentIndex].location}</span>
                     <span className="mx-2">•</span>
                     <span>{testimonials[currentIndex].car}</span>
@@ -193,43 +193,47 @@ export default function TestimonialsSection() {
             </div>
           </div>
 
-          {/* Navigation Controls */}
-          <div className="flex justify-center mt-8 space-x-2">
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={goToPrev}
-              className="rounded-full"
-            >
-              <ChevronLeft size={20} />
-              <span className="sr-only">Anterior</span>
-            </Button>
+          {/* Navigation Controls - Only show if more than 1 testimonial */}
+          {testimonials.length > 1 && (
+            <>
+              <div className="flex justify-center mt-8 space-x-4">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={goToPrev}
+                  className="rounded-full"
+                  aria-label="Testemunho anterior"
+                >
+                  <ChevronLeft size={16} />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={goToNext}
+                  className="rounded-full"
+                  aria-label="Próximo testemunho"
+                >
+                  <ChevronRight size={16} />
+                </Button>
+              </div>
 
-            <div className="flex items-center space-x-2">
-              {testimonials.map((_, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => setCurrentIndex(idx)}
-                  className={`w-2 h-2 rounded-full transition-all ${
-                    currentIndex === idx
-                      ? "bg-primary w-6"
-                      : "bg-gray-300 dark:bg-gray-600"
-                  }`}
-                  aria-label={`Ir para testemunho ${idx + 1}`}
-                />
-              ))}
-            </div>
-
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={goToNext}
-              className="rounded-full"
-            >
-              <ChevronRight size={20} />
-              <span className="sr-only">Próximo</span>
-            </Button>
-          </div>
+              {/* Dots Indicator */}
+              <div className="flex justify-center mt-6 space-x-2">
+                {testimonials.map((_, index) => (
+                  <button
+                    key={index}
+                    onClick={() => setCurrentIndex(index)}
+                    className={`w-2 h-2 rounded-full transition-all duration-200 ${
+                      index === currentIndex
+                        ? "bg-primary w-8"
+                        : "bg-muted-foreground/30 hover:bg-muted-foreground/50"
+                    }`}
+                    aria-label={`Ir para testemunho ${index + 1}`}
+                  />
+                ))}
+              </div>
+            </>
+          )}
         </div>
       </div>
     </section>

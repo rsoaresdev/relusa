@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Droplets, Car, RefreshCw } from "lucide-react";
+import { Droplets, Car, RefreshCw, Leaf } from "lucide-react";
 
 export default function StatsSection() {
   const [isVisible, setIsVisible] = useState(false);
@@ -63,21 +63,21 @@ export default function StatsSection() {
     return num.toString();
   };
 
+  // Calcular CO2 poupado (400g por lavagem)
+  const co2Saved = stats.totalBookings * 0.4; // 400g = 0.4kg
+
   return (
-    <section
-      id="stats"
-      className="py-20 bg-gradient-to-b from-white to-gray-50 dark:from-gray-900 dark:to-gray-950"
-    >
-      <div className="container mx-auto px-4">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold font-poppins mb-4 text-gray-900 dark:text-white">
+    <section id="stats" className="py-24 bg-muted/30">
+      <div className="container mx-auto px-6">
+        <div className="text-center mb-16 max-w-3xl mx-auto">
+          <h2 className="text-3xl md:text-4xl font-bold mb-4">
             O Nosso <span className="text-primary">Impacto</span>
           </h2>
-          <p className="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
+          <p className="text-lg text-muted-foreground leading-relaxed">
             Estamos comprometidos com a qualidade do serviço e a preservação do
             meio ambiente. Todos os dados são atualizados em tempo real.
           </p>
-          <div className="flex items-center justify-center mt-4 text-sm text-primary gap-2">
+          <div className="flex items-center justify-center mt-6 text-sm text-primary gap-2">
             <RefreshCw
               size={16}
               className={`${isLoading ? "animate-spin" : ""}`}
@@ -86,49 +86,60 @@ export default function StatsSection() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 max-w-7xl mx-auto">
           {[
             {
-              icon: <Car size={36} className="text-primary" />,
+              icon: <Car size={28} className="text-primary" />,
               value: stats.totalBookings,
               label: "Lavagens Realizadas",
               suffix: "",
               description: "Veículos lavados com qualidade e eficiência",
             },
             {
-              icon: <Droplets size={36} className="text-primary" />,
+              icon: <Droplets size={28} className="text-primary" />,
               value: stats.waterSaved,
               label: "Litros de Água Poupados",
               suffix: "L",
               description: "Água economizada com nossa tecnologia a seco",
             },
+            {
+              icon: <Leaf size={28} className="text-primary" />,
+              value: co2Saved,
+              label: "CO₂ Poupado",
+              suffix: "kg",
+              description: "Carbono não emitido vs lavagem tradicional",
+            },
           ].map((stat, index) => (
             <div
               key={index}
-              className={`flex flex-col items-center p-8 rounded-2xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-lg hover:shadow-xl transition-all duration-700 ${
+              className={`group p-10 rounded-2xl bg-card border border-border/50 hover:border-border shadow-sm hover:shadow-md transition-all duration-700 ${
                 isVisible
                   ? "opacity-100 translate-y-0"
                   : "opacity-0 translate-y-10"
               }`}
               style={{ transitionDelay: `${index * 150}ms` }}
             >
-              <div className="mb-6 bg-primary/10 p-4 rounded-full">
-                {stat.icon}
+              <div className="flex flex-col items-center text-center space-y-6">
+                <div className="w-16 h-16 bg-primary/10 p-4 rounded-xl group-hover:bg-primary/15 transition-colors">
+                  {stat.icon}
+                </div>
+                <div className="space-y-2">
+                  <div className="flex items-baseline justify-center">
+                    <span className="text-4xl md:text-5xl font-bold text-foreground">
+                      {isVisible ? formatNumber(stat.value) : "0"}
+                    </span>
+                    <span className="ml-1 text-2xl text-primary font-semibold">
+                      {stat.suffix}
+                    </span>
+                  </div>
+                  <h3 className="text-lg font-semibold text-foreground">
+                    {stat.label}
+                  </h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed max-w-xs">
+                    {stat.description}
+                  </p>
+                </div>
               </div>
-              <div className="flex items-baseline">
-                <span className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white">
-                  {isVisible ? formatNumber(stat.value) : "0"}
-                </span>
-                <span className="ml-1 text-2xl text-primary font-medium">
-                  {stat.suffix}
-                </span>
-              </div>
-              <p className="mt-3 text-lg font-medium text-gray-800 dark:text-gray-200 text-center">
-                {stat.label}
-              </p>
-              <p className="mt-2 text-sm text-gray-600 dark:text-gray-400 text-center">
-                {stat.description}
-              </p>
             </div>
           ))}
         </div>

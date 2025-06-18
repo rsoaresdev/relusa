@@ -5,8 +5,24 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { User, Settings, Trash2, Shield, Clock } from "lucide-react";
+import {
+  User,
+  Trash2,
+  Calendar,
+  Receipt,
+  Edit3,
+  FileText,
+  Clock,
+} from "lucide-react";
 import {
   supabase,
   getCurrentUser,
@@ -19,8 +35,6 @@ import SimpleProtectedRoute from "@/components/auth/SimpleProtectedRoute";
 import { format, parseISO } from "date-fns";
 import { pt } from "date-fns/locale";
 
-type ProfileTab = "info" | "security" | "bookings" | "danger";
-
 export default function ProfilePage() {
   const router = useRouter();
   const [user, setUser] = useState<UserType | null>(null);
@@ -28,7 +42,6 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  const [activeTab, setActiveTab] = useState<ProfileTab>("info");
   const [formData, setFormData] = useState({
     name: "",
     phone: "",
@@ -142,37 +155,37 @@ export default function ProfilePage() {
     switch (status) {
       case "pending":
         return (
-          <span className="px-2 py-1 text-xs rounded-full bg-yellow-100 text-yellow-800">
+          <span className="px-3 py-1 text-xs font-medium rounded-full bg-yellow-100 text-yellow-800 border border-yellow-200">
             Pendente
           </span>
         );
       case "approved":
         return (
-          <span className="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800">
+          <span className="px-3 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800 border border-blue-200">
             Aprovada
           </span>
         );
       case "rejected":
         return (
-          <span className="px-2 py-1 text-xs rounded-full bg-red-100 text-red-800">
+          <span className="px-3 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800 border border-red-200">
             Rejeitada
           </span>
         );
       case "started":
         return (
-          <span className="px-2 py-1 text-xs rounded-full bg-purple-100 text-purple-800">
+          <span className="px-3 py-1 text-xs font-medium rounded-full bg-purple-100 text-purple-800 border border-purple-200">
             Em andamento
           </span>
         );
       case "completed":
         return (
-          <span className="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">
+          <span className="px-3 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800 border border-green-200">
             Concluída
           </span>
         );
       default:
         return (
-          <span className="px-2 py-1 text-xs rounded-full bg-gray-100 text-gray-800">
+          <span className="px-3 py-1 text-xs font-medium rounded-full bg-muted text-muted-foreground border border-border">
             Desconhecido
           </span>
         );
@@ -189,11 +202,20 @@ export default function ProfilePage() {
     }
   };
 
+  // Filtrar marcações por categoria
+  const allBookings = bookings;
+  const pendingBookings = bookings.filter(
+    (b) => b.status === "pending" || b.status === "approved"
+  );
+  const completedBookings = bookings.filter((b) => b.status === "completed");
+
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pt-20 pb-10">
-        <div className="flex justify-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+      <div className="min-h-screen bg-background pt-24 pb-16">
+        <div className="container mx-auto px-6">
+          <div className="flex justify-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-2 border-primary border-t-transparent"></div>
+          </div>
         </div>
       </div>
     );
@@ -201,264 +223,256 @@ export default function ProfilePage() {
 
   return (
     <SimpleProtectedRoute>
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pt-20 pb-10">
-        <div className="container mx-auto px-4">
-          <div className="max-w-6xl mx-auto">
-            <div className="bg-white dark:bg-gray-800 shadow-md rounded-xl overflow-hidden">
-              {/* Header */}
-              <div className="bg-gradient-to-r from-primary/80 to-primary p-6 md:p-8">
-                <div className="flex flex-col md:flex-row items-center md:items-end gap-4">
-                  <div className="bg-white dark:bg-gray-800 rounded-full p-3 shadow-lg">
-                    <User size={48} className="text-primary" />
-                  </div>
-                  <div className="text-center md:text-left">
-                    <h1 className="text-2xl md:text-3xl font-bold text-white">
-                      {user?.name}
-                    </h1>
-                    <p className="text-white/80 mt-1">{user?.email}</p>
-                  </div>
-                </div>
+      <div className="min-h-screen bg-background pt-24 pb-16">
+        <div className="container mx-auto px-6 max-w-6xl">
+          {/* Header */}
+          <div className="mb-8">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center">
+                <User className="text-primary" size={24} />
               </div>
-
-              <div className="flex flex-col md:flex-row">
-                {/* Sidebar */}
-                <div className="w-full md:w-64 border-r border-gray-200 dark:border-gray-700">
-                  <nav className="p-4">
-                    <ul className="space-y-1">
-                      <li>
-                        <button
-                          onClick={() => setActiveTab("info")}
-                          className={`w-full flex items-center px-4 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                            activeTab === "info"
-                              ? "bg-primary/10 text-primary"
-                              : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-                          }`}
-                        >
-                          <User size={18} className="mr-3" />
-                          Informações Pessoais
-                        </button>
-                      </li>
-                      <li>
-                        <button
-                          onClick={() => setActiveTab("bookings")}
-                          className={`w-full flex items-center px-4 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                            activeTab === "bookings"
-                              ? "bg-primary/10 text-primary"
-                              : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-                          }`}
-                        >
-                          <Clock size={18} className="mr-3" />
-                          As Minhas Marcações
-                        </button>
-                      </li>
-                      <li>
-                        <button
-                          onClick={() => setActiveTab("danger")}
-                          className={`w-full flex items-center px-4 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                            activeTab === "danger"
-                              ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
-                              : "text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
-                          }`}
-                        >
-                          <Shield size={18} className="mr-3" />
-                          Zona de Perigo
-                        </button>
-                      </li>
-                    </ul>
-                  </nav>
-                </div>
-
-                {/* Content */}
-                <div className="flex-1 p-6">
-                  {activeTab === "info" && (
-                    <div className="max-w-xl">
-                      <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">
-                        Informações Pessoais
-                      </h2>
-                      <form onSubmit={handleSubmit} className="space-y-6">
-                        <div className="space-y-4">
-                          <div className="space-y-2">
-                            <Label
-                              htmlFor="email"
-                              className="text-gray-700 dark:text-gray-300"
-                            >
-                              Email
-                            </Label>
-                            <Input
-                              id="email"
-                              type="email"
-                              value={user?.email || ""}
-                              disabled
-                              className="bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700"
-                            />
-                            <p className="text-xs text-gray-500 dark:text-gray-400">
-                              O email não pode ser alterado
-                            </p>
-                          </div>
-
-                          <div className="space-y-2">
-                            <Label
-                              htmlFor="name"
-                              className="text-gray-700 dark:text-gray-300"
-                            >
-                              Nome
-                            </Label>
-                            <Input
-                              id="name"
-                              name="name"
-                              value={formData.name}
-                              onChange={handleChange}
-                              placeholder="O seu nome completo"
-                              required
-                              className="border-gray-200 dark:border-gray-700"
-                            />
-                          </div>
-
-                          <div className="space-y-2">
-                            <Label
-                              htmlFor="phone"
-                              className="text-gray-700 dark:text-gray-300"
-                            >
-                              Telemóvel
-                            </Label>
-                            <Input
-                              id="phone"
-                              name="phone"
-                              value={formData.phone}
-                              onChange={handleChange}
-                              placeholder="O seu número de telemóvel"
-                              className="border-gray-200 dark:border-gray-700"
-                            />
-                          </div>
-                        </div>
-
-                        <Button
-                          type="submit"
-                          className="w-full sm:w-auto"
-                          disabled={updating}
-                        >
-                          {updating ? (
-                            <>
-                              <span className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white mr-2"></span>
-                              A guardar...
-                            </>
-                          ) : (
-                            <>
-                              <Settings size={16} className="mr-2" />
-                              Guardar alterações
-                            </>
-                          )}
-                        </Button>
-                      </form>
-                    </div>
-                  )}
-
-                  {activeTab === "bookings" && (
-                    <div>
-                      <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">
-                        As Minhas Marcações
-                      </h2>
-
-                      {bookings.length === 0 ? (
-                        <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-8 text-center">
-                          <Clock
-                            size={40}
-                            className="mx-auto text-gray-400 mb-4"
-                          />
-                          <p className="text-gray-600 dark:text-gray-400 mb-4">
-                            Ainda não tem marcações... O seu carro está a
-                            sentir-se abandonado!
-                          </p>
-                          <Button onClick={() => router.push("/marcacoes")}>
-                            Fazer uma marcação
-                          </Button>
-                        </div>
-                      ) : (
-                        <div className="space-y-4">
-                          {bookings.map((booking) => (
-                            <div
-                              key={booking.id}
-                              className="bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-lg p-4 shadow-sm"
-                            >
-                              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                                <div>
-                                  <div className="flex items-center gap-2 mb-2">
-                                    {getBookingStatusBadge(booking.status)}
-                                    <span className="text-sm text-gray-500 dark:text-gray-400">
-                                      #{booking.id.substring(0, 8)}
-                                    </span>
-                                  </div>
-                                  <h3 className="font-medium text-gray-900 dark:text-white">
-                                    {booking.service_type === "complete"
-                                      ? "Lavagem Completa (Interior + Exterior)"
-                                      : "Lavagem Exterior"}
-                                  </h3>
-                                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                                    {formatDate(booking.date)}
-                                  </p>
-                                  <div className="flex flex-wrap gap-4 mt-2 text-sm text-gray-600 dark:text-gray-400">
-                                    <span>
-                                      {booking.car_model} ({booking.car_plate})
-                                    </span>
-                                    <span>{booking.address}</span>
-                                  </div>
-                                </div>
-                                <div className="text-right">
-                                  <div className="text-lg font-bold text-primary">
-                                    {booking.service_type === "complete"
-                                      ? booking.has_discount ? "15€" : "18€"
-                                      : booking.has_discount ? "10€" : "12€"}
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {activeTab === "danger" && (
-                    <div>
-                      <h2 className="text-xl font-semibold text-red-600 dark:text-red-400 mb-6">
-                        Zona de Perigo
-                      </h2>
-
-                      <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/30 rounded-lg p-6">
-                        <h3 className="text-lg font-medium text-red-700 dark:text-red-400 mb-2">
-                          Apagar Conta
-                        </h3>
-                        <p className="text-red-600/80 dark:text-red-300/80 mb-6">
-                          Ao apagar sua conta, todos os seus dados pessoais e
-                          histórico de marcações serão permanentemente
-                          removidos. Esta ação não pode ser desfeita.
-                        </p>
-
-                        <Button
-                          variant="destructive"
-                          className="bg-red-600 hover:bg-red-700"
-                          onClick={handleDeleteAccount}
-                          disabled={deleting}
-                        >
-                          {deleting ? (
-                            <>
-                              <span className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white mr-2"></span>
-                              A apagar...
-                            </>
-                          ) : (
-                            <>
-                              <Trash2 size={16} className="mr-2" />
-                              Apagar minha conta
-                            </>
-                          )}
-                        </Button>
-                      </div>
-                    </div>
-                  )}
-                </div>
+              <div>
+                <h1 className="text-3xl font-bold text-foreground">
+                  Meu Perfil
+                </h1>
+                <p className="text-muted-foreground">
+                  Gerencie as suas informações pessoais e marcações
+                </p>
               </div>
             </div>
           </div>
+
+          {/* Stats Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+            <Card className="shadow-sm">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground">
+                      Total de Marcações
+                    </p>
+                    <p className="text-2xl font-bold">{allBookings.length}</p>
+                  </div>
+                  <Calendar className="text-muted-foreground" size={20} />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="shadow-sm">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Pendentes</p>
+                    <p className="text-2xl font-bold">
+                      {pendingBookings.length}
+                    </p>
+                  </div>
+                  <Clock className="text-blue-500" size={20} />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="shadow-sm">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Concluídas</p>
+                    <p className="text-2xl font-bold">
+                      {completedBookings.length}
+                    </p>
+                  </div>
+                  <FileText className="text-green-500" size={20} />
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Tabs */}
+          <Tabs defaultValue="info" className="space-y-6">
+            <TabsList className="grid grid-cols-3 w-full">
+              <TabsTrigger value="info">Informações Pessoais</TabsTrigger>
+              <TabsTrigger value="bookings">
+                Minhas Marcações ({allBookings.length})
+              </TabsTrigger>
+              <TabsTrigger value="danger">Zona de Perigo</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="info">
+              <Card className="shadow-sm">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Edit3 size={20} />
+                    Informações Pessoais
+                  </CardTitle>
+                  <CardDescription>
+                    Atualize as suas informações pessoais aqui.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <form onSubmit={handleSubmit} className="space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-2">
+                        <Label htmlFor="name">Nome Completo</Label>
+                        <Input
+                          id="name"
+                          name="name"
+                          type="text"
+                          value={formData.name}
+                          onChange={handleChange}
+                          required
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="phone">Número de Telemóvel</Label>
+                        <Input
+                          id="phone"
+                          name="phone"
+                          type="tel"
+                          value={formData.phone}
+                          onChange={handleChange}
+                          required
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="email">Email (apenas leitura)</Label>
+                      <Input
+                        id="email"
+                        type="email"
+                        value={user?.email || ""}
+                        disabled
+                        className="bg-muted/50"
+                      />
+                    </div>
+
+                    <Button
+                      type="submit"
+                      disabled={updating}
+                      className="w-full md:w-auto"
+                    >
+                      {updating ? "A atualizar..." : "Atualizar Perfil"}
+                    </Button>
+                  </form>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="bookings">
+              <Card className="shadow-sm">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Calendar size={20} />
+                    Minhas Marcações
+                  </CardTitle>
+                  <CardDescription>
+                    Histórico das suas marcações e respetivos estados.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {bookings.length === 0 ? (
+                    <div className="text-center py-12">
+                      <Calendar
+                        size={48}
+                        className="mx-auto text-muted-foreground mb-4"
+                      />
+                      <h3 className="text-lg font-semibold text-foreground mb-2">
+                        Ainda não tem marcações
+                      </h3>
+                      <p className="text-muted-foreground mb-6">
+                        Faça a sua primeira marcação para aparecer aqui.
+                      </p>
+                      <Button asChild>
+                        <a href="/marcacoes">Fazer Marcação</a>
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {bookings.map((booking) => (
+                        <div
+                          key={booking.id}
+                          className="border border-border/50 rounded-lg p-6 hover:shadow-sm transition-shadow"
+                        >
+                          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                            <div className="space-y-2">
+                              <div className="flex items-center gap-3">
+                                <h3 className="font-semibold text-foreground">
+                                  {booking.service_type === "complete"
+                                    ? "Pack Completo"
+                                    : "Lavagem Exterior"}
+                                </h3>
+                                {getBookingStatusBadge(booking.status)}
+                              </div>
+                              <div className="text-sm text-muted-foreground space-y-1">
+                                <div className="flex items-center gap-2">
+                                  <Calendar size={14} />
+                                  <span>{formatDate(booking.date)}</span>
+                                </div>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <div className="text-lg font-bold text-primary">
+                                {booking.service_type === "complete"
+                                  ? "18€"
+                                  : "12€"}
+                              </div>
+                              {booking.status === "completed" && (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  asChild
+                                  className="mt-2"
+                                >
+                                  <a href="/perfil/faturas">
+                                    <Receipt size={14} className="mr-2" />
+                                    Ver Fatura
+                                  </a>
+                                </Button>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="danger">
+              <Card className="shadow-sm border-destructive/20">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-destructive">
+                    <Trash2 size={20} />
+                    Zona de Perigo
+                  </CardTitle>
+                  <CardDescription>
+                    Ações irreversíveis na sua conta.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-6">
+                    <div className="p-6 border border-destructive/20 rounded-lg bg-destructive/5">
+                      <h3 className="font-semibold text-destructive mb-2">
+                        Apagar Conta
+                      </h3>
+                      <p className="text-sm text-muted-foreground mb-4">
+                        Esta ação apagará permanentemente a sua conta e todos os
+                        dados associados. Esta ação não pode ser desfeita.
+                      </p>
+                      <Button
+                        variant="destructive"
+                        onClick={handleDeleteAccount}
+                        disabled={deleting}
+                      >
+                        {deleting ? "A apagar..." : "Apagar Conta"}
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
         </div>
       </div>
     </SimpleProtectedRoute>

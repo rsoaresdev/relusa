@@ -21,17 +21,9 @@ export default function HeroSection() {
   }, []);
 
   return (
-    <section className="relative min-h-screen flex items-center overflow-hidden bg-gradient-to-br from-white to-gray-50 dark:from-gray-900 dark:to-gray-950">
-      {/* Background elements */}
-      <div className="absolute inset-0 z-0">
-        <div className="absolute top-20 right-10 w-64 h-64 rounded-full bg-primary/25 blur-2xl animate-pulse"></div>
-        <div className="absolute bottom-10 left-10 w-72 h-72 rounded-full bg-blue-500/25 blur-2xl animate-pulse"></div>
-        <div className="absolute top-40 left-1/4 w-48 h-48 rounded-full bg-green-500/25 blur-2xl animate-pulse"></div>
-        <div className="absolute bottom-40 right-1/4 w-56 h-56 rounded-full bg-primary/25 blur-2xl animate-pulse"></div>
-      </div>
-
-      <div className="container mx-auto px-4 py-20 md:py-32 z-10">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+    <section className="relative min-h-screen flex items-center pt-20 pb-16 bg-gradient-to-b from-background to-muted/20">
+      <div className="container mx-auto px-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center max-w-7xl mx-auto">
           {/* Content */}
           <div
             className={`space-y-8 transition-all duration-1000 ${
@@ -40,71 +32,102 @@ export default function HeroSection() {
                 : "opacity-0 translate-y-10"
             }`}
           >
-            <div className="space-y-4">
-              <h1 className="text-4xl lg:text-6xl font-bold font-poppins text-gray-900 dark:text-white leading-tight">
-                <span className="text-primary">Lavagem automóvel</span> a seco
-                profissional e ecológica
+            <div className="space-y-6">
+              <h1 className="text-4xl lg:text-6xl font-bold leading-tight">
+                <span className="text-primary">Lavagem automóvel</span>
+                <br />a seco profissional
               </h1>
-              <p className="text-lg md:text-xl text-gray-700 dark:text-gray-300">
+              <p className="text-xl text-muted-foreground leading-relaxed max-w-lg">
                 Serviço de lavagem a seco em Vila Nova de Gaia.{" "}
-                <span className="relative inline-block">
-                  <span className="font-medium">O seu carro não recusa.</span>
-                  <span className="absolute bottom-0 left-0 w-full h-0.5 bg-primary animate-pulse"></span>
+                <span className="font-medium text-foreground">
+                  O seu carro não recusa.
                 </span>
               </p>
             </div>
 
-            <div className="flex flex-wrap gap-4">
-              <Button size="lg" asChild>
+            <div className="flex flex-col sm:flex-row gap-4">
+              <Button size="lg" asChild className="text-base">
                 <Link href="/marcacoes" className="gap-2">
-                  <CalendarCheck className="h-4 w-4" />
-                  Agendar Lavagem <ArrowRight size={16} />
+                  <CalendarCheck className="h-5 w-5" />
+                  Agendar Lavagem
+                  <ArrowRight size={18} />
                 </Link>
               </Button>
-              <Button size="lg" variant="outline" asChild>
+              <Button size="lg" variant="outline" asChild className="text-base">
                 <Link href="/#servicos">Ver Serviços</Link>
               </Button>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-4">
+            {/* Features Grid */}
+            <div className="grid grid-cols-2 gap-4 pt-6 max-w-2xl mx-auto">
               {[
                 {
-                  icon: <Droplets className="text-primary" size={24} />,
+                  icon: <Droplets className="text-white" size={20} />,
                   title: "Ecológico",
-                  description: "Apenas 1L de água por lavagem",
+                  description: "Apenas 1L de água",
+                  gradient: "from-blue-500/80 to-cyan-500/80",
+                  bgColor: "bg-blue-500/80",
                 },
                 {
-                  icon: <Clock className="text-primary" size={24} />,
+                  icon: <Clock className="text-white" size={20} />,
                   title: "Rápido",
-                  description: "Pronto em apenas 1 hora",
+                  description: "Pronto em 1 hora",
+                  gradient: "from-green-500/80 to-emerald-500/80",
+                  bgColor: "bg-green-500/80",
                 },
                 {
-                  icon: <Award className="text-primary" size={24} />,
+                  icon: <Award className="text-white" size={20} />,
                   title: "Qualidade",
-                  description: "Só usamos produtos premium de alta qualidade",
+                  description: "Produtos premium",
+                  gradient: "from-purple-500/80 to-violet-500/80",
+                  bgColor: "bg-purple-500/80",
                 },
                 {
-                  icon: <Receipt className="text-primary" size={24} />,
+                  icon: <Receipt className="text-white" size={20} />,
                   title: "Fatura",
-                  description: "Emitimos fatura para todos os serviços",
+                  description: "Para todos os serviços",
+                  gradient: "from-orange-500/80 to-amber-500/80",
+                  bgColor: "bg-orange-500/80",
                 },
               ].map((feature, index) => (
                 <div
                   key={index}
-                  className={`flex flex-col items-center p-4 rounded-xl bg-white/80 dark:bg-gray-800/50 backdrop-blur-sm border border-gray-200 dark:border-gray-700 shadow-sm transition-all duration-700 ${
+                  className={`group relative p-4 rounded-2xl bg-white/80 backdrop-blur-sm border border-white/30 hover:bg-white/90 transition-all duration-500 hover:scale-[1.02] hover:-translate-y-1 shadow-sm hover:shadow-md ${
                     isVisible
                       ? "opacity-100 translate-y-0"
                       : "opacity-0 translate-y-10"
                   }`}
-                  style={{ transitionDelay: `${index * 150}ms` }}
+                  style={{ transitionDelay: `${index * 100}ms` }}
                 >
-                  <div className="mb-3">{feature.icon}</div>
-                  <h3 className="font-medium text-gray-900 dark:text-white">
-                    {feature.title}
-                  </h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 text-center">
-                    {feature.description}
-                  </p>
+                  <div className="flex items-center justify-between">
+                    <div
+                      className={`w-12 h-12 rounded-xl bg-gradient-to-br ${feature.gradient} flex items-center justify-center shadow-md group-hover:shadow-lg transition-all duration-300 group-hover:scale-105`}
+                    >
+                      {feature.icon}
+                    </div>
+                    <div className="flex-1 px-4">
+                      <h3 className="font-bold text-base text-gray-900 group-hover:text-gray-700 transition-colors">
+                        {feature.title}
+                      </h3>
+                      <p className="text-sm text-gray-600 leading-relaxed">
+                        {feature.description}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Enhanced glow effect */}
+                  <div
+                    className={`absolute inset-0 rounded-2xl bg-gradient-to-br ${feature.gradient} opacity-0 group-hover:opacity-5 transition-opacity duration-500 pointer-events-none`}
+                  />
+
+                  {/* Subtle border glow */}
+                  <div
+                    className={`absolute inset-0 rounded-2xl border-2 border-transparent bg-gradient-to-br ${feature.gradient} opacity-0 group-hover:opacity-10 transition-opacity duration-500 pointer-events-none`}
+                    style={{
+                      mask: "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)",
+                      maskComposite: "xor",
+                    }}
+                  />
                 </div>
               ))}
             </div>
@@ -118,19 +141,21 @@ export default function HeroSection() {
                 : "opacity-0 translate-x-10"
             }`}
           >
-            <div className="relative h-[500px] w-full rounded-2xl overflow-hidden shadow-xl">
-              <Image
-                src="/hero.webp"
-                alt="Lavagem de carro a seco Relusa"
-                fill
-                className="object-cover brightness-75"
-                priority
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent"></div>
+            <div className="relative aspect-[4/5] w-full max-w-md mx-auto lg:max-w-none">
+              <div className="absolute inset-0 rounded-2xl bg-gradient-to-tr from-primary/20 to-primary/5 transform rotate-3"></div>
+              <div className="relative h-full rounded-2xl overflow-hidden shadow-2xl border border-border/50">
+                <Image
+                  src="/hero.webp"
+                  alt="Lavagem de carro a seco Relusa"
+                  fill
+                  className="object-cover"
+                  priority
+                />
 
-              {/* Promotion badge */}
-              <div className="absolute top-6 right-6 bg-primary text-white px-4 py-2 rounded-full text-sm font-medium animate-pulse">
-                5ª lavagem com 50% desconto!
+                {/* Promotion Badge */}
+                <div className="absolute top-6 right-6 bg-primary text-primary-foreground px-4 py-2 rounded-full text-sm font-medium shadow-lg">
+                  5ª lavagem com 50% desconto!
+                </div>
               </div>
             </div>
           </div>

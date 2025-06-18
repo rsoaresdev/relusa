@@ -4,117 +4,189 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
-import { Menu, X } from "lucide-react";
+import { Menu, X, Calendar, User } from "lucide-react";
+import { useAuthContext } from "@/components/auth/AuthProvider";
 import ProfileDropdown from "./ProfileDropdown";
 
-const menuItems = [
-  { label: "Início", href: "/" },
-  { label: "Serviços", href: "/#servicos" },
-  { label: "Como Funciona", href: "/#como-funciona" },
-  { label: "Sobre Nós", href: "/sobre" },
-  { label: "Contactos", href: "/contactos" },
-  { label: "Marcações", href: "/marcacoes", highlight: true },
+const navigation = [
+  { name: "Início", href: "/" },
+  { name: "Serviços", href: "/#servicos" },
+  { name: "Como Funciona", href: "/#como-funciona" },
+  { name: "Sobre Nós", href: "/sobre" },
+  { name: "Contactos", href: "/contactos" },
 ];
 
 export default function Header() {
-  const [isOpen, setIsOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const { user, loading } = useAuthContext();
 
   useEffect(() => {
     const handleScroll = () => {
-      setScrolled(window.scrollY > 50);
+      setScrolled(window.scrollY > 20);
     };
 
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const closeMenu = () => setIsOpen(false);
-
   return (
     <header
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
         scrolled
-          ? "bg-white/90 dark:bg-gray-900/90 backdrop-blur-md shadow-md py-2"
-          : "bg-transparent py-4"
+          ? "bg-background/80 backdrop-blur-md border-b border-border/50 shadow-sm"
+          : "bg-transparent"
       }`}
     >
-      <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between">
-          <Link href="/" className="flex items-center space-x-2">
+      <div className="container mx-auto px-6">
+        <div className="flex items-center justify-between h-20">
+          {/* Logo */}
+          <Link href="/" className="flex items-center space-x-3 group">
             <Image
               src="/svg_green.svg"
-              alt="Relusa"
+              alt="Relusa Logo"
               width={40}
               height={40}
-              className="w-10 h-10 object-contain"
-              suppressHydrationWarning
+              className="w-10 h-10 transition-transform group-hover:scale-105"
             />
-            <span className="font-poppins font-bold text-2xl text-gray-900 dark:text-white">
-              Relusa
-            </span>
+            <div className="flex flex-col">
+              <span className="font-bold text-xl text-foreground">Relusa</span>
+              <span className="text-xs text-muted-foreground font-medium -mt-1">
+                O seu carro não recusa
+              </span>
+            </div>
           </Link>
 
-          {/* Menu desktop */}
-          <nav className="hidden md:flex items-center space-x-6">
-            {menuItems.map((item) => (
+          {/* Desktop Navigation */}
+          <nav className="hidden lg:flex items-center space-x-8">
+            {navigation.map((item) => (
               <Link
-                key={item.href}
+                key={item.name}
                 href={item.href}
-                className={`relative font-medium text-sm transition-colors hover:text-primary ${
-                  item.highlight
-                    ? "text-primary font-semibold"
-                    : "text-gray-700 dark:text-gray-200"
-                }`}
+                className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors relative group"
               >
-                {item.label}
-                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary transition-all group-hover:w-full"></span>
+                {item.name}
+                <span className="absolute inset-x-0 -bottom-1 h-0.5 bg-primary scale-x-0 group-hover:scale-x-100 transition-transform origin-left"></span>
               </Link>
             ))}
-            <div className="ml-2">
-              <ProfileDropdown />
-            </div>
           </nav>
 
-          {/* Menu mobile - apenas botão de menu */}
-          <div className="md:hidden flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setIsOpen(!isOpen)}
-              aria-label="Menu"
-            >
-              {isOpen ? <X size={24} /> : <Menu size={24} />}
-            </Button>
+          {/* Desktop Actions */}
+          <div className="hidden lg:flex items-center space-x-4">
+            {!loading && (
+              <>
+                {user ? (
+                  <div className="flex items-center space-x-3">
+                    <Button
+                      className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-xl transition-all duration-300 font-semibold px-6"
+                      asChild
+                    >
+                      <Link href="/marcacoes">
+                        <Calendar size={18} />
+                        Nova Marcação
+                      </Link>
+                    </Button>
+                    <ProfileDropdown />
+                  </div>
+                ) : (
+                  <Button
+                    className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-xl transition-all duration-300 font-semibold px-6"
+                    asChild
+                  >
+                    <Link href="/marcacoes">
+                      <Calendar size={18} />
+                      Fazer Marcação
+                    </Link>
+                  </Button>
+                )}
+              </>
+            )}
           </div>
-        </div>
-      </div>
 
-      {/* Mobile menu */}
-      {isOpen && (
-        <div className="md:hidden absolute top-full left-0 right-0 bg-white dark:bg-gray-900 shadow-lg py-4 px-4 border-t border-gray-200 dark:border-gray-800 animate-in slide-in-from-top">
-          <nav className="flex flex-col space-y-4">
-            {menuItems.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                onClick={closeMenu}
-                className={`px-4 py-2 rounded-md transition-colors ${
-                  item.highlight
-                    ? "text-primary font-semibold"
-                    : "text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
-                }`}
-              >
-                {item.label}
-              </Link>
-            ))}
-            {/* ProfileDropdown apenas no menu mobile */}
-            <div className="px-4 py-2">
-              <ProfileDropdown />
-            </div>
-          </nav>
+          {/* Mobile menu button */}
+          <button
+            className="lg:hidden p-2 rounded-lg hover:bg-muted/50 transition-colors"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            aria-label="Toggle mobile menu"
+          >
+            {mobileMenuOpen ? (
+              <X size={24} className="text-foreground" />
+            ) : (
+              <Menu size={24} className="text-foreground" />
+            )}
+          </button>
         </div>
-      )}
+
+        {/* Mobile Navigation */}
+        {mobileMenuOpen && (
+          <div className="lg:hidden border-t border-border/50 bg-background/95 backdrop-blur-md">
+            <div className="px-2 pt-2 pb-6 space-y-1">
+              {navigation.map((item) => (
+                <Link
+                  key={item.name}
+                  href={item.href}
+                  className="block px-4 py-3 text-base font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-lg transition-colors"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  {item.name}
+                </Link>
+              ))}
+
+              <div className="pt-4 space-y-3">
+                {!loading && (
+                  <>
+                    {user ? (
+                      <>
+                        <Button
+                          size="lg"
+                          className="w-full gap-2 bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg font-semibold"
+                          asChild
+                        >
+                          <Link
+                            href="/marcacoes"
+                            onClick={() => setMobileMenuOpen(false)}
+                          >
+                            <Calendar size={18} />
+                            Nova Marcação
+                          </Link>
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="lg"
+                          className="w-full gap-2"
+                          asChild
+                        >
+                          <Link
+                            href="/perfil"
+                            onClick={() => setMobileMenuOpen(false)}
+                          >
+                            <User size={18} />
+                            Meu Perfil
+                          </Link>
+                        </Button>
+                      </>
+                    ) : (
+                      <Button
+                        size="lg"
+                        className="w-full gap-2 bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg font-semibold"
+                        asChild
+                      >
+                        <Link
+                          href="/marcacoes"
+                          onClick={() => setMobileMenuOpen(false)}
+                        >
+                          <Calendar size={18} />
+                          Fazer Marcação
+                        </Link>
+                      </Button>
+                    )}
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
     </header>
   );
 }
