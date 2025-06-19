@@ -18,9 +18,7 @@ import {
   User,
   Trash2,
   Calendar,
-  Receipt,
   Edit3,
-  FileText,
   Clock,
 } from "lucide-react";
 import { supabase, getUserBookings, Booking } from "@/lib/supabase/config";

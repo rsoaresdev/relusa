@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase/config";
 import { toast } from "sonner";
 import { Mail, Lock, User, Phone, Eye, EyeOff } from "lucide-react";
-import { useEmailService } from "@/lib/hooks/useEmailService";
 
 // Definir limites de caracteres para cada campo
 const CHAR_LIMITS = {
@@ -66,9 +65,6 @@ export default function AuthForm({ view, toggleView }: AuthFormProps) {
     phone: "",
   });
   const [passwordStrength, setPasswordStrength] = useState(0);
-
-  // Hook de email
-  const emailService = useEmailService();
 
   // Verificar segurança da password
   useEffect(() => {

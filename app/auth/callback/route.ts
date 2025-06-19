@@ -14,13 +14,6 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey, {
   },
 });
 
-// Função auxiliar para logging em desenvolvimento
-const logDev = (message: string, data?: any) => {
-  if (process.env.NODE_ENV === "development") {
-    console.log(`[Auth Callback] ${message}`, data || "");
-  }
-};
-
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
