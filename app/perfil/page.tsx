@@ -14,13 +14,7 @@ import {
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import {
-  User,
-  Trash2,
-  Calendar,
-  Edit3,
-  Clock,
-} from "lucide-react";
+import { User, Trash2, Calendar, Edit3, Clock } from "lucide-react";
 import { supabase, getUserBookings, Booking } from "@/lib/supabase/config";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import { useAuthContext } from "@/components/auth/AuthProvider";
@@ -211,20 +205,22 @@ export default function ProfilePage() {
               </div>
             ) : (
               <Tabs defaultValue="profile" className="space-y-6">
-                <TabsList className="grid w-full grid-cols-2">
+                <TabsList className="grid w-full grid-cols-2 h-11">
                   <TabsTrigger
                     value="profile"
-                    className="flex items-center gap-2"
+                    className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm"
                   >
-                    <User className="w-4 h-4" />
-                    Perfil
+                    <User className="w-3 h-3 sm:w-4 sm:h-4" />
+                    <span className="hidden xs:inline">Perfil</span>
+                    <span className="xs:hidden">Info</span>
                   </TabsTrigger>
                   <TabsTrigger
                     value="bookings"
-                    className="flex items-center gap-2"
+                    className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm"
                   >
-                    <Calendar className="w-4 h-4" />
-                    Marcações
+                    <Calendar className="w-3 h-3 sm:w-4 sm:h-4" />
+                    <span className="hidden xs:inline">Marcações</span>
+                    <span className="xs:hidden">Lista</span>
                   </TabsTrigger>
                 </TabsList>
 
@@ -350,43 +346,47 @@ export default function ProfilePage() {
                           {bookings.map((booking) => (
                             <div
                               key={booking.id}
-                              className="border border-border rounded-lg p-4"
+                              className="border border-border rounded-lg p-3 sm:p-4"
                             >
-                              <div className="flex justify-between items-start mb-3">
-                                <div>
-                                  <h4 className="font-semibold">
+                              <div className="flex flex-col xs:flex-row xs:justify-between xs:items-start gap-2 xs:gap-3 mb-3">
+                                <div className="flex-1 min-w-0">
+                                  <h4 className="font-semibold text-sm sm:text-base truncate">
                                     {booking.service_type === "exterior"
                                       ? "Lavagem Exterior"
                                       : "Lavagem Completa"}
                                   </h4>
-                                  <p className="text-sm text-muted-foreground">
+                                  <p className="text-xs sm:text-sm text-muted-foreground">
                                     {formatDate(booking.date)}
                                   </p>
                                 </div>
-                                {getBookingStatusBadge(booking.status)}
+                                <div className="flex-shrink-0">
+                                  {getBookingStatusBadge(booking.status)}
+                                </div>
                               </div>
-                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                              <div className="space-y-2 sm:space-y-0 sm:grid sm:grid-cols-2 sm:gap-4 text-xs sm:text-sm">
                                 <div>
                                   <p className="flex items-center gap-2">
-                                    <Clock className="w-4 h-4" />
-                                    {booking.time_slot === "custom"
-                                      ? booking.custom_time
-                                      : booking.time_slot === "morning"
-                                      ? "Manhã (9h-12h)"
-                                      : booking.time_slot === "afternoon"
-                                      ? "Tarde (12h-17h)"
-                                      : "Noite (17h-20h)"}
+                                    <Clock className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
+                                    <span className="truncate">
+                                      {booking.time_slot === "custom"
+                                        ? booking.custom_time
+                                        : booking.time_slot === "morning"
+                                        ? "Manhã (9h-12h)"
+                                        : booking.time_slot === "afternoon"
+                                        ? "Tarde (12h-17h)"
+                                        : "Noite (17h-20h)"}
+                                    </span>
                                   </p>
                                 </div>
                                 <div>
-                                  <p className="text-muted-foreground">
+                                  <p className="text-muted-foreground truncate">
                                     {booking.car_model} - {booking.car_plate}
                                   </p>
                                 </div>
                               </div>
                               {booking.notes && (
                                 <div className="mt-3 pt-3 border-t border-border">
-                                  <p className="text-sm text-muted-foreground">
+                                  <p className="text-xs sm:text-sm text-muted-foreground">
                                     <strong>Notas:</strong> {booking.notes}
                                   </p>
                                 </div>

@@ -183,6 +183,16 @@
   ::-webkit-scrollbar-thumb:hover {
     @apply bg-muted-foreground/30;
   }
+
+  /* Scrollbar hide utility */
+  .scrollbar-hide {
+    /* Firefox */
+    scrollbar-width: none;
+    /* Safari and Chrome */
+    &::-webkit-scrollbar {
+      display: none;
+    }
+  }
 }
 
 /* Custom animations for modern feel */

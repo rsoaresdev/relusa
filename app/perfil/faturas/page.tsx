@@ -225,59 +225,76 @@ export default function InvoicesPage() {
           </div>
 
           {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-8">
             <Card className="shadow-sm">
-              <CardContent className="p-6">
+              <CardContent className="p-4 sm:p-6">
                 <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-muted-foreground">Total</p>
-                    <p className="text-2xl font-bold">{allBookings.length}</p>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs sm:text-sm text-muted-foreground">
+                      Total
+                    </p>
+                    <p className="text-lg sm:text-2xl font-bold truncate">
+                      {allBookings.length}
+                    </p>
                   </div>
-                  <FileText className="text-muted-foreground" size={20} />
+                  <FileText
+                    className="text-muted-foreground flex-shrink-0"
+                    size={16}
+                  />
                 </div>
               </CardContent>
             </Card>
 
             <Card className="shadow-sm">
-              <CardContent className="p-6">
+              <CardContent className="p-4 sm:p-6">
                 <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-muted-foreground">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs sm:text-sm text-muted-foreground">
                       Em Progresso
                     </p>
-                    <p className="text-2xl font-bold">
+                    <p className="text-lg sm:text-2xl font-bold truncate">
                       {inProgressBookings.length}
                     </p>
                   </div>
-                  <Clock className="text-blue-500" size={20} />
+                  <Clock className="text-blue-500 flex-shrink-0" size={16} />
                 </div>
               </CardContent>
             </Card>
 
             <Card className="shadow-sm">
-              <CardContent className="p-6">
+              <CardContent className="p-4 sm:p-6">
                 <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-muted-foreground">A Processar</p>
-                    <p className="text-2xl font-bold">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs sm:text-sm text-muted-foreground">
+                      A Processar
+                    </p>
+                    <p className="text-lg sm:text-2xl font-bold truncate">
                       {completedWithoutInvoice.length}
                     </p>
                   </div>
-                  <AlertCircle className="text-yellow-500" size={20} />
+                  <AlertCircle
+                    className="text-yellow-500 flex-shrink-0"
+                    size={16}
+                  />
                 </div>
               </CardContent>
             </Card>
 
             <Card className="shadow-sm">
-              <CardContent className="p-6">
+              <CardContent className="p-4 sm:p-6">
                 <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-muted-foreground">Disponíveis</p>
-                    <p className="text-2xl font-bold">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs sm:text-sm text-muted-foreground">
+                      Disponíveis
+                    </p>
+                    <p className="text-lg sm:text-2xl font-bold truncate">
                       {completedWithInvoice.length}
                     </p>
                   </div>
-                  <Download className="text-green-500" size={20} />
+                  <Download
+                    className="text-green-500 flex-shrink-0"
+                    size={16}
+                  />
                 </div>
               </CardContent>
             </Card>
@@ -285,18 +302,26 @@ export default function InvoicesPage() {
 
           {/* Tabs */}
           <Tabs defaultValue="all" className="space-y-6">
-            <TabsList className="grid grid-cols-4 w-full">
-              <TabsTrigger value="all">
-                Todas ({allBookings.length})
+            <TabsList className="w-full">
+              <TabsTrigger value="all" className="text-xs sm:text-sm">
+                <span className="hidden sm:inline">Todas</span>
+                <span className="sm:hidden">Todas</span>
+                <span className="ml-1">({allBookings.length})</span>
               </TabsTrigger>
-              <TabsTrigger value="inprogress">
-                Em Progresso ({inProgressBookings.length})
+              <TabsTrigger value="inprogress" className="text-xs sm:text-sm">
+                <span className="hidden sm:inline">Em Progresso</span>
+                <span className="sm:hidden">Progresso</span>
+                <span className="ml-1">({inProgressBookings.length})</span>
               </TabsTrigger>
-              <TabsTrigger value="processing">
-                A Processar ({completedWithoutInvoice.length})
+              <TabsTrigger value="processing" className="text-xs sm:text-sm">
+                <span className="hidden sm:inline">A Processar</span>
+                <span className="sm:hidden">Processar</span>
+                <span className="ml-1">({completedWithoutInvoice.length})</span>
               </TabsTrigger>
-              <TabsTrigger value="available">
-                Disponíveis ({completedWithInvoice.length})
+              <TabsTrigger value="available" className="text-xs sm:text-sm">
+                <span className="hidden sm:inline">Disponíveis</span>
+                <span className="sm:hidden">Pronto</span>
+                <span className="ml-1">({completedWithInvoice.length})</span>
               </TabsTrigger>
             </TabsList>
 
@@ -412,90 +437,132 @@ function BookingsList({
             key={booking.id}
             className="shadow-sm hover:shadow-md transition-shadow"
           >
-            <CardContent className="p-6">
-              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
-                {/* Left side - Booking info */}
-                <div className="space-y-4">
-                  <div className="flex items-center gap-3">
-                    <h3 className="text-lg font-semibold text-foreground">
-                      {getServiceType(booking.service_type)}
-                    </h3>
+            <CardContent className="p-4 sm:p-6">
+              <div className="flex flex-col gap-4">
+                {/* Header */}
+                <div className="flex flex-col xs:flex-row xs:items-center xs:justify-between gap-2">
+                  <h3 className="text-base sm:text-lg font-semibold text-foreground">
+                    {getServiceType(booking.service_type)}
+                  </h3>
+                  <div className="flex items-center justify-between xs:justify-end gap-2">
                     <Badge
-                      variant={status.variant as "default" | "destructive" | "outline" | "secondary" | null | undefined}
-                      className="flex items-center gap-1"
+                      variant={
+                        status.variant as
+                          | "default"
+                          | "destructive"
+                          | "outline"
+                          | "secondary"
+                          | null
+                          | undefined
+                      }
+                      className="flex items-center gap-1 text-xs"
                     >
                       {status.icon}
                       {status.label}
                     </Badge>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <Calendar size={16} />
-                      <span>{formatDate(booking.date)}</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <Clock size={16} />
-                      <span>
-                        {getTimeSlot(booking.time_slot, booking.custom_time)}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <Car size={16} />
-                      <span>
-                        {booking.car_model} ({booking.car_plate})
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <MapPin size={16} />
-                      <span>{booking.address}</span>
+                    <div className="text-right xs:hidden">
+                      <div className="text-lg font-bold text-primary">
+                        {getPrice(
+                          booking.service_type,
+                          booking.has_discount || false
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
 
-                {/* Right side - Price and actions */}
-                <div className="flex flex-col lg:items-end gap-4">
-                  <div className="text-right">
-                    <div className="text-2xl font-bold text-primary">
+                {/* Details */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs sm:text-sm">
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <Calendar size={14} className="flex-shrink-0" />
+                    <span className="truncate">{formatDate(booking.date)}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <Clock size={14} className="flex-shrink-0" />
+                    <span className="truncate">
+                      {getTimeSlot(booking.time_slot, booking.custom_time)}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <Car size={14} className="flex-shrink-0" />
+                    <span className="truncate">
+                      {booking.car_model} ({booking.car_plate})
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <MapPin size={14} className="flex-shrink-0" />
+                    <span className="truncate">{booking.address}</span>
+                  </div>
+                </div>
+
+                {/* Footer */}
+                <div className="flex flex-col xs:flex-row xs:items-center xs:justify-between gap-3 pt-2 border-t border-border">
+                  <div className="hidden xs:block">
+                    <div className="text-xl sm:text-2xl font-bold text-primary">
                       {getPrice(
                         booking.service_type,
                         booking.has_discount || false
                       )}
                     </div>
                     {booking.has_discount && (
-                      <Badge variant="secondary" className="mt-1">
+                      <Badge variant="secondary" className="mt-1 text-xs">
                         Desconto aplicado
                       </Badge>
                     )}
                   </div>
 
-                  {booking.invoice ? (
-                    <Button
-                      onClick={() => onDownloadInvoice(booking.invoice!)}
-                      disabled={downloadingInvoice === booking.invoice.id}
-                      className="gap-2"
-                    >
-                      {downloadingInvoice === booking.invoice.id ? (
-                        <>
-                          <Loader2 size={16} className="animate-spin" />A
-                          descarregar...
-                        </>
-                      ) : (
-                        <>
-                          <Download size={16} />
-                          Descarregar Fatura
-                        </>
-                      )}
-                    </Button>
-                  ) : booking.status === "completed" ? (
-                    <Button variant="outline" disabled>
-                      Fatura em processamento
-                    </Button>
-                  ) : (
-                    <Button variant="outline" disabled>
-                      Aguarda conclusão
-                    </Button>
-                  )}
+                  <div className="w-full xs:w-auto">
+                    {booking.invoice ? (
+                      <Button
+                        onClick={() => onDownloadInvoice(booking.invoice!)}
+                        disabled={downloadingInvoice === booking.invoice.id}
+                        className="gap-2 w-full xs:w-auto text-xs sm:text-sm"
+                        size="sm"
+                      >
+                        {downloadingInvoice === booking.invoice.id ? (
+                          <>
+                            <Loader2 size={14} className="animate-spin" />
+                            <span className="hidden sm:inline">
+                              A descarregar...
+                            </span>
+                            <span className="sm:hidden">Descarregando...</span>
+                          </>
+                        ) : (
+                          <>
+                            <Download size={14} />
+                            <span className="hidden sm:inline">
+                              Descarregar Fatura
+                            </span>
+                            <span className="sm:hidden">Download</span>
+                          </>
+                        )}
+                      </Button>
+                    ) : booking.status === "completed" ? (
+                      <Button
+                        variant="outline"
+                        disabled
+                        className="w-full xs:w-auto text-xs sm:text-sm"
+                        size="sm"
+                      >
+                        <span className="hidden sm:inline">
+                          Fatura em processamento
+                        </span>
+                        <span className="sm:hidden">Processando</span>
+                      </Button>
+                    ) : (
+                      <Button
+                        variant="outline"
+                        disabled
+                        className="w-full xs:w-auto text-xs sm:text-sm"
+                        size="sm"
+                      >
+                        <span className="hidden sm:inline">
+                          Aguarda conclusão
+                        </span>
+                        <span className="sm:hidden">Aguardando</span>
+                      </Button>
+                    )}
+                  </div>
                 </div>
               </div>
             </CardContent>

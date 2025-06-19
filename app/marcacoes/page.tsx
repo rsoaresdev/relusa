@@ -122,27 +122,29 @@ export default function MarcacoesPage() {
                       </p>
                     </div>
 
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
                       {[
                         {
                           href: "mailto:geral@relusa.pt",
-                          icon: <Mail className="w-4 h-4" />,
+                          icon: <Mail className="w-3 h-3 sm:w-4 sm:h-4" />,
                           label: "Email",
                         },
                         {
                           href: "https://instagram.com/relusa.pt",
-                          icon: <Instagram className="w-4 h-4" />,
+                          icon: <Instagram className="w-3 h-3 sm:w-4 sm:h-4" />,
                           label: "Instagram",
                           external: true,
                         },
                         {
                           href: "tel:+351932440827",
-                          icon: <Phone className="w-4 h-4" />,
+                          icon: <Phone className="w-3 h-3 sm:w-4 sm:h-4" />,
                           label: "Chamada",
                         },
                         {
                           href: "/contactos",
-                          icon: <UserRoundPen className="w-4 h-4" />,
+                          icon: (
+                            <UserRoundPen className="w-3 h-3 sm:w-4 sm:h-4" />
+                          ),
                           label: "Formulário",
                         },
                       ].map((contact, index) => (
@@ -150,7 +152,8 @@ export default function MarcacoesPage() {
                           key={index}
                           variant="outline"
                           asChild
-                          className="h-12"
+                          className="h-10 sm:h-12"
+                          size="sm"
                         >
                           <Link
                             href={contact.href}
@@ -158,10 +161,12 @@ export default function MarcacoesPage() {
                               target: "_blank",
                               rel: "noopener noreferrer",
                             })}
-                            className="gap-2 flex-col h-auto py-3"
+                            className="gap-1 sm:gap-2 flex-col h-auto py-2 sm:py-3"
                           >
                             {contact.icon}
-                            <span className="text-xs">{contact.label}</span>
+                            <span className="text-[10px] sm:text-xs">
+                              {contact.label}
+                            </span>
                           </Link>
                         </Button>
                       ))}

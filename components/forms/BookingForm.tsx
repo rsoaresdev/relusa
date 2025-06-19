@@ -325,63 +325,75 @@ export default function BookingForm({ session, onCancel }: BookingFormProps) {
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Tipo de Serviço
           </label>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <div
-              className={`border rounded-md p-4 cursor-pointer transition-all ${
+              className={`border rounded-md p-3 sm:p-4 cursor-pointer transition-all ${
                 formData.service_type === "complete"
                   ? "border-primary bg-primary/5"
                   : "border-gray-200 dark:border-gray-700"
               }`}
               onClick={() => handleSelectChange("service_type", "complete")}
             >
-              <div className="flex justify-between items-center">
-                <div>
-                  <h4 className="font-medium text-gray-900 dark:text-white">
+              <div className="flex flex-col xs:flex-row xs:justify-between xs:items-center gap-2">
+                <div className="flex-1 min-w-0">
+                  <h4 className="font-medium text-gray-900 dark:text-white text-sm sm:text-base">
                     Lavagem Completa
                   </h4>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                  <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
                     Interior + Exterior
                   </p>
                 </div>
-                {hasDiscount ? (
-                  <div className="text-right">
-                    <span className="font-bold text-gray-400 line-through block">
+                <div className="flex-shrink-0">
+                  {hasDiscount ? (
+                    <div className="text-right">
+                      <span className="font-bold text-gray-400 line-through block text-sm">
+                        18€
+                      </span>
+                      <span className="font-bold text-green-600 text-sm sm:text-base">
+                        9€
+                      </span>
+                    </div>
+                  ) : (
+                    <span className="font-bold text-primary text-sm sm:text-base">
                       18€
                     </span>
-                    <span className="font-bold text-green-600">9€</span>
-                  </div>
-                ) : (
-                  <span className="font-bold text-primary">18€</span>
-                )}
+                  )}
+                </div>
               </div>
             </div>
             <div
-              className={`border rounded-md p-4 cursor-pointer transition-all ${
+              className={`border rounded-md p-3 sm:p-4 cursor-pointer transition-all ${
                 formData.service_type === "exterior"
                   ? "border-primary bg-primary/5"
                   : "border-gray-200 dark:border-gray-700"
               }`}
               onClick={() => handleSelectChange("service_type", "exterior")}
             >
-              <div className="flex justify-between items-center">
-                <div>
-                  <h4 className="font-medium text-gray-900 dark:text-white">
+              <div className="flex flex-col xs:flex-row xs:justify-between xs:items-center gap-2">
+                <div className="flex-1 min-w-0">
+                  <h4 className="font-medium text-gray-900 dark:text-white text-sm sm:text-base">
                     Lavagem Exterior
                   </h4>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                  <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
                     Apenas exterior
                   </p>
                 </div>
-                {hasDiscount ? (
-                  <div className="text-right">
-                    <span className="font-bold text-gray-400 line-through block">
+                <div className="flex-shrink-0">
+                  {hasDiscount ? (
+                    <div className="text-right">
+                      <span className="font-bold text-gray-400 line-through block text-sm">
+                        12€
+                      </span>
+                      <span className="font-bold text-green-600 text-sm sm:text-base">
+                        6€
+                      </span>
+                    </div>
+                  ) : (
+                    <span className="font-bold text-primary text-sm sm:text-base">
                       12€
                     </span>
-                    <span className="font-bold text-green-600">6€</span>
-                  </div>
-                ) : (
-                  <span className="font-bold text-primary">12€</span>
-                )}
+                  )}
+                </div>
               </div>
             </div>
           </div>
@@ -720,23 +732,31 @@ export default function BookingForm({ session, onCancel }: BookingFormProps) {
           ></textarea>
         </div>
 
-        <div className="flex gap-4">
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
           <Button
             type="button"
             variant="outline"
-            className="flex-1"
+            className="flex-1 order-2 sm:order-1"
             onClick={onCancel}
           >
             Cancelar
           </Button>
-          <Button type="submit" className="flex-1" disabled={loading}>
+          <Button
+            type="submit"
+            className="flex-1 order-1 sm:order-2"
+            disabled={loading}
+          >
             {loading ? (
               <>
                 <span className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white mr-2"></span>
-                A enviar...
+                <span className="hidden sm:inline">A enviar...</span>
+                <span className="sm:hidden">Enviando...</span>
               </>
             ) : (
-              "Confirmar Marcação"
+              <>
+                <span className="hidden sm:inline">Confirmar Marcação</span>
+                <span className="sm:hidden">Confirmar</span>
+              </>
             )}
           </Button>
         </div>
