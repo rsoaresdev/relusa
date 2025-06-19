@@ -6,6 +6,9 @@ export const metadata = {
   title: "Contactos | Relusa - O seu carro não recusa",
   description:
     "Entre em contacto com a Relusa para agendar a sua lavagem automóvel a seco em Vila Nova de Gaia ou esclarecer dúvidas sobre os nossos serviços.",
+  alternates: {
+    canonical: "/contactos",
+  },
 };
 
 export default function ContactosPage() {

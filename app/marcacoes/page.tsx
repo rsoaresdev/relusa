@@ -16,6 +16,9 @@ export const metadata = {
   title: "Marcações | Relusa - O seu carro não recusa",
   description:
     "Agende a sua lavagem automóvel a seco em Vila Nova de Gaia. Serviço profissional e ecológico ao seu local.",
+  alternates: {
+    canonical: "/marcacoes",
+  },
 };
 
 export default function MarcacoesPage() {

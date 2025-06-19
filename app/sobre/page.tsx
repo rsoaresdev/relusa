@@ -7,6 +7,9 @@ export const metadata = {
   title: "Sobre Nós | Relusa - O seu carro não recusa",
   description:
     "Conheça a história da Relusa, empresa de lavagem automóvel a seco em Vila Nova de Gaia. Fundada por Rafael Soares, oferecemos serviços de lavagem ecológica e profissional.",
+  alternates: {
+    canonical: "/sobre",
+  },
 };
 
 export default function SobrePage() {

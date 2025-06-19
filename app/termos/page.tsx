@@ -17,6 +17,9 @@ export const metadata = {
   title: "Termos de Uso | Relusa - O seu carro não recusa",
   description:
     "Termos e condições de utilização dos serviços da Relusa, empresa de lavagem automóvel a seco em Vila Nova de Gaia.",
+  alternates: {
+    canonical: "/termos",
+  },
 };
 
 export default function TermosPage() {
@@ -347,10 +350,15 @@ export default function TermosPage() {
                   </h3>
                   <ul className="pl-6 mb-4">
                     <li>
-                      <strong>As marcações são realizadas exclusivamente através do website</strong> após criar conta e fazer login
+                      <strong>
+                        As marcações são realizadas exclusivamente através do
+                        website
+                      </strong>{" "}
+                      após criar conta e fazer login
                     </li>
                     <li>
-                      Não aceitamos marcações por telefone, email ou redes sociais
+                      Não aceitamos marcações por telefone, email ou redes
+                      sociais
                     </li>
                     <li>
                       Agendamentos podem ser feitos com até 30 dias de
@@ -443,7 +451,9 @@ export default function TermosPage() {
                   <p className="mt-4">Notas importantes sobre pagamentos:</p>
                   <ul className="pl-6">
                     <li>
-                      <strong>Emitimos fatura para todos os serviços prestados</strong>
+                      <strong>
+                        Emitimos fatura para todos os serviços prestados
+                      </strong>
                     </li>
                     <li>
                       Serviços adicionais serão orçamentados separadamente
@@ -462,19 +472,24 @@ export default function TermosPage() {
                       Todas as faturas são emitidas após a conclusão do serviço
                     </li>
                     <li>
-                      As faturas são disponibilizadas num prazo máximo de 5 dias úteis
+                      As faturas são disponibilizadas num prazo máximo de 5 dias
+                      úteis
                     </li>
                     <li>
-                      O cliente é notificado por email quando a fatura fica disponível
+                      O cliente é notificado por email quando a fatura fica
+                      disponível
                     </li>
                     <li>
-                      As faturas podem ser consultadas e descarregadas através da área de cliente
+                      As faturas podem ser consultadas e descarregadas através
+                      da área de cliente
                     </li>
                     <li>
-                      O NIF deve ser fornecido no momento da marcação para emissão de fatura
+                      O NIF deve ser fornecido no momento da marcação para
+                      emissão de fatura
                     </li>
                     <li>
-                      Mantemos uma cópia digital de todas as faturas emitidas por motivos legais
+                      Mantemos uma cópia digital de todas as faturas emitidas
+                      por motivos legais
                     </li>
                   </ul>
                 </div>
@@ -640,7 +655,7 @@ export default function TermosPage() {
                     <li>
                       Formulário de contacto:{" "}
                       <a
-                        href="/contact"
+                        href="/contactos"
                         className="text-primary hover:underline"
                       >
                         Formulário de contacto

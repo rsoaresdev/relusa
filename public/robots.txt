@@ -2,12 +2,16 @@
 User-agent: *
 Allow: /
 
-# Sitemap
+# Sitemap (preferred domain with www)
 Sitemap: https://www.relusa.pt/sitemap.xml
+
+# Host preference - always use www subdomain
+Host: https://www.relusa.pt
 
 # Disallow admin areas
 Disallow: /admin/
 Disallow: /api/
+Disallow: /auth/
 
 # Crawl delay
 Crawl-delay: 10 

@@ -16,6 +16,9 @@ export const metadata = {
   title: "Política de Privacidade | Relusa - O seu carro não recusa",
   description:
     "Política de privacidade da Relusa, detalhando como recolhemos, utilizamos e protegemos os seus dados pessoais.",
+  alternates: {
+    canonical: "/privacidade",
+  },
 };
 
 export default function PrivacidadePage() {
