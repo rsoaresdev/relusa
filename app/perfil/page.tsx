@@ -61,10 +61,39 @@ export default function ProfilePage() {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+
+    // Validação específica para o campo telefone
+    if (name === "phone") {
+      // Remove todos os caracteres que não sejam números ou + no início
+      let cleanedValue = value.replace(/[^\d+]/g, "");
+
+      // Se há um +, deve estar apenas no início
+      if (cleanedValue.includes("+")) {
+        const plusCount = (cleanedValue.match(/\+/g) || []).length;
+        if (plusCount > 1 || !cleanedValue.startsWith("+")) {
+          // Remove todos os + se houver mais de um ou se não estiver no início
+          cleanedValue = cleanedValue.replace(/\+/g, "");
+        } else {
+          // Garante que há apenas um + no início
+          cleanedValue = "+" + cleanedValue.substring(1).replace(/\+/g, "");
+        }
+      }
+
+      // Limita a 20 caracteres
+      if (cleanedValue.length > 20) {
+        cleanedValue = cleanedValue.substring(0, 20);
+      }
+
+      setFormData((prev) => ({
+        ...prev,
+        [name]: cleanedValue,
+      }));
+    } else {
+      setFormData((prev) => ({
+        ...prev,
+        [name]: value,
+      }));
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -260,8 +289,12 @@ export default function ProfilePage() {
                                 type="tel"
                                 value={formData.phone}
                                 onChange={handleChange}
-                                placeholder="+351 xxx xxx xxx"
+                                placeholder="+351912345678"
+                                maxLength={20}
                               />
+                              <p className="text-xs text-muted-foreground">
+                                Formato: +351912345678 (máx. 20 caracteres)
+                              </p>
                             </div>
                           </div>
                           <div className="space-y-2">
