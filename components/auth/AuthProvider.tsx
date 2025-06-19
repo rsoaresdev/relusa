@@ -2,6 +2,7 @@
 
 import { createContext, useContext, ReactNode } from "react";
 import { useAuth } from "@/lib/hooks/useAuth";
+import { useSessionRecovery } from "@/lib/hooks/useSessionRecovery";
 import type { User } from "@/lib/supabase/config";
 
 interface AuthContextType {
@@ -29,6 +30,9 @@ interface AuthProviderProps {
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {
   const authData = useAuth();
+
+  // Ativar recuperação automática de sessão
+  useSessionRecovery();
 
   return (
     <AuthContext.Provider value={authData}>{children}</AuthContext.Provider>

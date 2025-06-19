@@ -9,6 +9,8 @@ import {
   ChevronDown,
   LayoutDashboard,
   FileText,
+  Calendar,
+  Star,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -22,7 +24,7 @@ export default function ProfileDropdown() {
   const { user, loading, isAdmin, signOut, refreshUser } = useAuthContext();
   const loadingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Timeout de segurança para o loading do perfil
+  // Timeout de segurança para o loading do perfil (mais tolerante)
   useEffect(() => {
     if (loading) {
       // Limpar timeout anterior
@@ -30,7 +32,7 @@ export default function ProfileDropdown() {
         clearTimeout(loadingTimeoutRef.current);
       }
 
-      // Configurar timeout de 8 segundos para o ProfileDropdown
+      // Configurar timeout de 30 segundos para o ProfileDropdown (mais tempo)
       loadingTimeoutRef.current = setTimeout(() => {
         if (loading) {
           console.warn(
@@ -40,7 +42,7 @@ export default function ProfileDropdown() {
             console.error("Erro ao refresh do ProfileDropdown:", error);
           });
         }
-      }, 8000);
+      }, 30000); // 30 segundos em vez de 8
     } else {
       // Limpar timeout se não estiver mais em loading
       if (loadingTimeoutRef.current) {
@@ -110,10 +112,35 @@ export default function ProfileDropdown() {
               size="sm"
               className="w-full justify-start text-sm"
               tabIndex={0}
-              aria-label="Configurações de perfil"
+              aria-label="O meu perfil"
             >
-              <Settings size={16} className="mr-2" />
-              Configurações
+              <Settings size={16} className="mr-2" />O Meu Perfil
+            </Button>
+          </Link>
+
+          <Link href="/perfil/marcacoes" className="w-full">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="w-full justify-start text-sm"
+              tabIndex={0}
+              aria-label="As minhas marcações"
+            >
+              <Calendar size={16} className="mr-2" />
+              As Minhas Marcações
+            </Button>
+          </Link>
+
+          <Link href="/perfil/avaliacoes" className="w-full">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="w-full justify-start text-sm"
+              tabIndex={0}
+              aria-label="As minhas avaliações"
+            >
+              <Star size={16} className="mr-2" />
+              As Minhas Avaliações
             </Button>
           </Link>
 

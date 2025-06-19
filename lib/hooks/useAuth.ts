@@ -116,8 +116,30 @@ export const useAuth = (): UseAuthReturn => {
             setUser(userProfile.user);
             setIsAdmin(userProfile.isAdmin);
           } else {
-            setUser(null);
-            setIsAdmin(false);
+            // Se não conseguir obter o perfil, tentar refresh da sessão
+            console.warn("Perfil não encontrado, tentando refresh da sessão");
+            try {
+              const { data } = await supabase.auth.refreshSession();
+              if (data.session) {
+                const retryProfile = await fetchUserProfile(
+                  data.session.user.id
+                );
+                if (retryProfile) {
+                  setUser(retryProfile.user);
+                  setIsAdmin(retryProfile.isAdmin);
+                } else {
+                  setUser(null);
+                  setIsAdmin(false);
+                }
+              } else {
+                setUser(null);
+                setIsAdmin(false);
+              }
+            } catch (refreshError) {
+              console.error("Erro ao fazer refresh da sessão:", refreshError);
+              setUser(null);
+              setIsAdmin(false);
+            }
           }
           setLoading(false);
         }
@@ -160,12 +182,16 @@ export const useAuth = (): UseAuthReturn => {
       // Terminar sessão no Supabase
       await supabase.auth.signOut();
 
-      // Limpar localStorage manualmente
+      // Limpar localStorage manualmente (incluindo a nova chave)
       if (typeof window !== "undefined") {
         try {
           const keys = Object.keys(localStorage);
           keys.forEach((key) => {
-            if (key.includes("supabase") || key.includes("auth")) {
+            if (
+              key.includes("supabase") ||
+              key.includes("auth") ||
+              key.includes("relusa-auth")
+            ) {
               localStorage.removeItem(key);
             }
           });
@@ -194,6 +220,21 @@ export const useAuth = (): UseAuthReturn => {
     // Função para inicializar
     const initialize = async () => {
       try {
+        // Verificar se há parâmetro auth=success na URL (callback de OAuth)
+        if (typeof window !== "undefined") {
+          const urlParams = new URLSearchParams(window.location.search);
+          if (urlParams.get("auth") === "success") {
+            // Remover parâmetro da URL
+            window.history.replaceState(
+              {},
+              document.title,
+              window.location.pathname
+            );
+            // Aguardar um pouco para garantir que a sessão foi definida
+            await new Promise((resolve) => setTimeout(resolve, 500));
+          }
+        }
+
         const { data } = await supabase.auth.getSession();
         await updateAuthState(data.session);
       } catch (error) {
@@ -225,15 +266,49 @@ export const useAuth = (): UseAuthReturn => {
           return;
         }
 
+        // Para TOKEN_REFRESHED, apenas atualizar sem logs desnecessários
+        if (event === "TOKEN_REFRESHED") {
+          if (session?.user?.id) {
+            await updateAuthState(session);
+          }
+          return;
+        }
+
         // Para outros eventos, atualizar estado
         await updateAuthState(session);
       }
     );
 
+    // Configurar refresh automático de sessão a cada 15 minutos
+    const refreshInterval = setInterval(async () => {
+      if (mounted.current) {
+        try {
+          const {
+            data: { session },
+          } = await supabase.auth.getSession();
+          if (session) {
+            // Verificar se o token expira em menos de 5 minutos
+            const expiresAt = session.expires_at || 0;
+            const now = Math.floor(Date.now() / 1000);
+            const timeUntilExpiry = expiresAt - now;
+
+            // Se expira em menos de 5 minutos, fazer refresh
+            if (timeUntilExpiry < 300) {
+              console.log("Fazendo refresh preventivo do token");
+              await supabase.auth.refreshSession();
+            }
+          }
+        } catch (error) {
+          console.error("Erro no refresh automático:", error);
+        }
+      }
+    }, 15 * 60 * 1000); // 15 minutos
+
     // Cleanup
     return () => {
       mounted.current = false;
       subscription.unsubscribe();
+      clearInterval(refreshInterval);
     };
   }, [updateAuthState]);
 

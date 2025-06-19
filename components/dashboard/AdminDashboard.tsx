@@ -15,11 +15,13 @@ import {
   Search,
   X,
   Euro,
+  Star,
 } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { pt } from "date-fns/locale";
 import { Booking, User, LoyaltyPoints, Invoice } from "@/lib/supabase/config";
 import AdminBookingCard from "./AdminBookingCard";
+import AdminReviewsTable from "./AdminReviewsTable";
 import { useEmailService } from "@/lib/hooks/useEmailService";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -351,6 +353,10 @@ export default function AdminDashboard({
           break;
         case "completed":
           await emailService.sendServiceCompletedEmail(updatedBooking);
+          // Enviar também o email solicitando avaliação
+          await emailService.sendServiceCompletedWithReviewRequestEmail(
+            updatedBooking
+          );
 
           // Quando uma reserva é concluída, verificar os pontos de fidelidade
           // e enviar emails de lembrete ou desconto conforme apropriado
@@ -368,7 +374,7 @@ export default function AdminDashboard({
             const loyaltyPoints = loyaltyData as LoyaltyPoints;
 
             // Verificar se o cliente está na 4ª lavagem (próximo da 5ª)
-            if (loyaltyPoints.bookings_count % 5 === 3) {
+            if (loyaltyPoints.bookings_count % 5 === 4) {
               // Enviar email de lembrete (na 4ª lavagem)
               await emailService.sendLoyaltyReminderEmail(
                 updatedBooking.user_id
@@ -686,6 +692,13 @@ export default function AdminDashboard({
             >
               <Users size={16} />
               Clientes
+            </TabsTrigger>
+            <TabsTrigger
+              value="reviews"
+              className="gap-2 data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 rounded-md transition-all"
+            >
+              <Star size={16} />
+              Avaliações
             </TabsTrigger>
           </TabsList>
 
@@ -1087,6 +1100,11 @@ export default function AdminDashboard({
                 </tbody>
               </table>
             </div>
+          </TabsContent>
+
+          {/* Conteúdo da Tab de Avaliações */}
+          <TabsContent value="reviews">
+            <AdminReviewsTable />
           </TabsContent>
         </Tabs>
       </div>

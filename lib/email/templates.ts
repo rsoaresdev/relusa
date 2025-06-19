@@ -834,8 +834,8 @@ export const loyaltyReminderEmailTemplate = (
                 <div style="width: 40px; height: 40px; border-radius: 50%; background-color: ${
                   isCompleted ? styles.accentColor : "#e2e8f0"
                 }; display: flex; align-items: center; justify-content: center; color: ${
-                  isCompleted ? "white" : "#9ca3af"
-                }; font-weight: bold; margin: 0 auto; font-size: 16px;">
+                isCompleted ? "white" : "#9ca3af"
+              }; font-weight: bold; margin: 0 auto; font-size: 16px;">
                   ${i + 1}
                 </div>
                 <div style="font-size: 12px; color: #64748b; margin-top: 5px; text-align: center;">
@@ -1517,6 +1517,109 @@ export const bookingRescheduledEmailTemplate = (
 };
 
 // Template de fatura emitida
+// Email de agradecimento por avaliação
+export const reviewThankYouEmailTemplate = (
+  userName: string,
+  rating: number,
+  comment?: string
+) => {
+  const content = `
+    <div style="text-align: center; margin-bottom: 30px;">
+      <div style="background-color: ${
+        styles.accentColor
+      }; display: inline-block; border-radius: 50%; width: 80px; height: 80px; margin-bottom: 20px;">
+        <div style="color: white; font-size: 40px; line-height: 80px;">⭐</div>
+      </div>
+      <h2 style="color: ${
+        styles.accentColor
+      }; margin: 0;">Obrigado pela sua Avaliação!</h2>
+    </div>
+
+    <p>Olá, ${userName || "Cliente"}! 🌟</p>
+    <p>Muito obrigado por ter dispensado o seu tempo para avaliar o nosso serviço. O seu feedback é extremamente valioso para nós e ajuda-nos a melhorar continuamente.</p>
+    
+    <div class="info-box">
+      <h3 style="margin-top: 0;">A Sua Avaliação</h3>
+      <div style="text-align: center; margin: 20px 0;">
+        <div style="display: flex; justify-content: center; align-items: center; gap: 4px; margin-bottom: 15px;">
+          ${[...Array(5)]
+            .map(
+              (_, i) =>
+                `<span style="color: ${
+                  i < rating ? "#fbbf24" : "#d1d5db"
+                }; font-size: 24px;">★</span>`
+            )
+            .join("")}
+        </div>
+        <p style="font-size: 18px; font-weight: bold; color: ${
+          styles.primaryColor
+        }; margin: 0;">
+          ${rating} de 5 estrelas
+        </p>
+        ${
+          comment
+            ? `<div style="background-color: ${styles.secondaryColor}; border-radius: 8px; padding: 15px; margin-top: 15px; border-left: 4px solid ${styles.primaryColor};">
+            <p style="margin: 0; font-style: italic; color: ${styles.textColor};">"${comment}"</p>
+          </div>`
+            : ""
+        }
+      </div>
+    </div>
+    
+    <div style="background-color: ${
+      styles.secondaryColor
+    }; border-radius: 8px; padding: 20px; margin: 20px 0;">
+      <h4 style="margin-top: 0; color: ${
+        styles.primaryColor
+      };">A sua opinião faz a diferença! 💚</h4>
+      <ul style="margin: 0; padding-left: 20px;">
+        <li>Cada avaliação ajuda-nos a perceber o que fazemos bem e onde podemos melhorar</li>
+        <li>O seu feedback contribui para a qualidade do nosso serviço</li>
+        <li>Clientes como você são a razão pela qual nos esforçamos para ser os melhores</li>
+        ${
+          rating >= 4
+            ? "<li>Se autorizou a publicação, a sua avaliação poderá aparecer no nosso site após aprovação</li>"
+            : ""
+        }
+      </ul>
+    </div>
+    
+    ${
+      rating >= 4
+        ? `<div style="text-align: center; margin: 30px 0;">
+        <p style="margin-bottom: 20px;">Ficou satisfeito? Recomende-nos aos seus amigos!</p>
+        <a href="https://www.relusa.pt/marcacoes" class="button">Agendar Nova Lavagem</a>
+      </div>`
+        : `<div style="text-align: center; margin: 30px 0;">
+        <p style="margin-bottom: 20px;">Queremos melhorar! Entre em contacto connosco para nos ajudar a perceber como podemos servir melhor.</p>
+        <a href="mailto:geral@relusa.pt" class="button">Contactar-nos</a>
+      </div>`
+    }
+    
+    <div style="background-color: #f8fafc; border-radius: 8px; padding: 16px; margin-top: 20px;">
+      <p style="margin: 0; font-size: 14px; text-align: center;">
+        <strong>Precisa de mais alguma coisa?</strong><br>
+        Estamos sempre disponíveis para ajudar através do email <a href="mailto:geral@relusa.pt" style="color: ${
+          styles.primaryColor
+        };">geral@relusa.pt</a> ou telefone <a href="tel:+351932440827" style="color: ${
+    styles.primaryColor
+  };">932 440 827</a>
+      </p>
+    </div>
+    
+    <p>Mais uma vez, muito obrigado pelo seu tempo e confiança!</p>
+    
+    <p>Com os melhores cumprimentos,<br>Equipa Relusa</p>
+  `;
+
+  return {
+    subject: `⭐ Obrigado pela sua avaliação de ${rating} estrela${
+      rating > 1 ? "s" : ""
+    }! - Relusa`,
+    html: baseLayout(content, "Obrigado pela Avaliação - Relusa"),
+  };
+};
+
 export const invoiceIssuedEmailTemplate = (
   booking: Booking,
   userName: string
@@ -1644,5 +1747,215 @@ export const invoiceIssuedEmailTemplate = (
   return {
     subject: "🧾 Fatura Emitida - Relusa",
     html: baseLayout(content, "Fatura Emitida - Relusa"),
+  };
+};
+
+// Email de conclusão de serviço solicitando avaliação
+export const serviceCompletedWithReviewRequestEmailTemplate = (
+  booking: Booking,
+  userName: string
+) => {
+  const content = `
+    <div style="text-align: center; margin-bottom: 30px;">
+      <div style="background-color: ${
+        styles.accentColor
+      }; display: inline-block; border-radius: 50%; width: 80px; height: 80px; margin-bottom: 20px;">
+        <div style="color: white; font-size: 40px; line-height: 80px;">✨</div>
+      </div>
+      <h2 style="color: ${
+        styles.accentColor
+      }; margin: 0;">Serviço Concluído com Sucesso!</h2>
+    </div>
+
+    <p>Olá, ${userName || "Cliente"}! 🌟</p>
+    <p>O seu serviço de lavagem foi concluído com sucesso! Esperamos que esteja satisfeito com o resultado.</p>
+    
+    <div class="info-box">
+      <h3 style="margin-top: 0;">Detalhes do Serviço</h3>
+      <table>
+        <tr>
+          <td><strong>Serviço</strong></td>
+          <td>
+            <div style="display: flex; align-items: center;">
+              <span style="margin-right: 8px;">🚗</span>
+              ${getServiceType(booking.service_type)}
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td><strong>Data</strong></td>
+          <td>
+            <div style="display: flex; align-items: center;">
+              <span style="margin-right: 8px;">📅</span>
+              ${formatDate(booking.date)}
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td><strong>Veículo</strong></td>
+          <td>
+            <div style="display: flex; align-items: center;">
+              <span style="margin-right: 8px;">🚘</span>
+              ${booking.car_model} (${booking.car_plate})
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td><strong>Preço</strong></td>
+          <td>
+            <div style="display: flex; align-items: center;">
+              <span style="margin-right: 8px;">💰</span>
+              ${getPrice(booking.service_type, booking.has_discount || false)}
+            </div>
+          </td>
+        </tr>
+      </table>
+    </div>
+    
+    <div style="background-color: ${styles.secondaryColor}; border: 2px solid ${
+    styles.primaryColor
+  }; border-radius: 12px; padding: 24px; margin: 25px 0; text-align: center;">
+      <h3 style="margin-top: 0; color: ${styles.primaryColor};">
+        ⭐ A Sua Opinião É Importante!
+      </h3>
+      <p style="margin: 15px 0;">
+        Ficou satisfeito com o nosso serviço? Ajude-nos a melhorar partilhando a sua experiência!
+      </p>
+      <p style="margin: 15px 0; font-size: 14px; color: #64748b;">
+        A sua avaliação ajuda outros clientes e permite-nos continuar a oferecer um serviço de qualidade.
+      </p>
+      <a href="https://www.relusa.pt/perfil/avaliacoes" class="button" style="background-color: ${
+        styles.accentColor
+      } !important;">
+        Avaliar Serviço
+      </a>
+    </div>
+    
+    <div style="background-color: ${
+      styles.secondaryColor
+    }; border-radius: 8px; padding: 20px; margin: 20px 0;">
+      <h4 style="margin-top: 0; color: ${
+        styles.primaryColor
+      };">Dicas de Manutenção</h4>
+      <ul style="margin: 0; padding-left: 20px;">
+        <li>Evite lavar o carro nos próximos 2-3 dias para manter o efeito da proteção</li>
+        <li>Em caso de chuva, não se preocupe - o tratamento é resistente à água</li>
+        <li>Para manter o brilho por mais tempo, evite estacionar sob árvores</li>
+        <li>Recomendamos uma nova lavagem a cada 2-3 semanas</li>
+      </ul>
+    </div>
+    
+    <div style="text-align: center; margin: 30px 0;">
+      <p style="margin-bottom: 20px;">Pronto para a próxima lavagem?</p>
+      <a href="https://www.relusa.pt/marcacoes" class="button">Agendar Nova Lavagem</a>
+    </div>
+    
+    <div style="background-color: #f8fafc; border-radius: 8px; padding: 16px; margin-top: 20px;">
+      <p style="margin: 0; font-size: 14px; text-align: center;">
+        <strong>Precisa de ajuda?</strong><br>
+        Se tiver alguma questão, contacte-nos através do email <a href="mailto:geral@relusa.pt" style="color: ${
+          styles.primaryColor
+        };">geral@relusa.pt</a>
+      </p>
+    </div>
+  `;
+
+  return {
+    subject: "✨ Serviço Concluído! Avalie a sua experiência - Relusa",
+    html: baseLayout(content, "Serviço Concluído - Relusa"),
+  };
+};
+
+// Email para administrador quando há nova avaliação pendente
+export const adminNewReviewNotificationEmailTemplate = (
+  review: any,
+  userName: string,
+  serviceName: string
+) => {
+  const content = `
+    <div style="text-align: center; margin-bottom: 30px;">
+      <div style="background-color: ${
+        styles.primaryColor
+      }; display: inline-block; border-radius: 50%; width: 80px; height: 80px; margin-bottom: 20px;">
+        <div style="color: white; font-size: 40px; line-height: 80px;">📝</div>
+      </div>
+      <h2 style="color: ${
+        styles.primaryColor
+      }; margin: 0;">Nova Avaliação Pendente</h2>
+    </div>
+
+    <p>Olá Administrador!</p>
+    <p>Uma nova avaliação foi submetida por um cliente e está pendente de aprovação.</p>
+    
+    <div class="info-box">
+      <h3 style="margin-top: 0;">Detalhes da Avaliação</h3>
+      <table>
+        <tr>
+          <td><strong>Cliente</strong></td>
+          <td>
+            <div style="display: flex; align-items: center;">
+              <span style="margin-right: 8px;">👤</span>
+              ${userName}
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td><strong>Classificação</strong></td>
+          <td>
+            <div style="display: flex; align-items: center;">
+              <span style="margin-right: 8px;">⭐</span>
+              ${review.rating} de 5 estrelas
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td><strong>Serviço</strong></td>
+          <td>
+            <div style="display: flex; align-items: center;">
+              <span style="margin-right: 8px;">🚗</span>
+              ${serviceName}
+            </div>
+          </td>
+        </tr>
+        ${
+          review.comment
+            ? `
+        <tr>
+          <td><strong>Comentário</strong></td>
+          <td style="padding: 10px; background-color: ${styles.secondaryColor}; border-radius: 4px;">
+            "${review.comment}"
+          </td>
+        </tr>
+        `
+            : ""
+        }
+      </table>
+    </div>
+    
+    <div style="background-color: ${styles.secondaryColor}; border: 2px solid ${
+    styles.primaryColor
+  }; border-radius: 12px; padding: 24px; margin: 25px 0; text-align: center;">
+      <h3 style="margin-top: 0; color: ${styles.primaryColor};">
+        🔍 Ação Necessária
+      </h3>
+      <p style="margin: 15px 0;">
+        Esta avaliação necessita da sua aprovação antes de ser publicada no website.
+      </p>
+      <a href="https://www.relusa.pt/admin" class="button">
+        Gerir Avaliações
+      </a>
+    </div>
+    
+    <div style="background-color: #f8fafc; border-radius: 8px; padding: 16px; margin-top: 20px;">
+      <p style="margin: 0; font-size: 14px; text-align: center;">
+        <strong>💡 Lembrete:</strong><br>
+        Avaliações aprovadas aparecem automaticamente na página principal do website e ajudam a construir confiança com novos clientes.
+      </p>
+    </div>
+  `;
+
+  return {
+    subject: "📝 Nova Avaliação Pendente de Aprovação - Relusa",
+    html: baseLayout(content, "Nova Avaliação Pendente - Relusa"),
   };
 };

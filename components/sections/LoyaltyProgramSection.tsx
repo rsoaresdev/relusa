@@ -58,8 +58,8 @@ export default function LoyaltyProgramSection() {
 
               <p className="text-gray-700 dark:text-gray-300 mb-6">
                 A cada lavagem que faz connosco, acumula pontos no nosso
-                programa de fidelidade. Ao atingir a 5ª lavagem, oferecemos-lhe
-                um desconto de 50% na próxima marcação.
+                programa de fidelidade. Na 5ª lavagem, oferecemos-lhe um
+                desconto de 50% aplicado automaticamente.
               </p>
 
               <div className="mb-8">

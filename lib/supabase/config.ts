@@ -13,7 +13,7 @@ if (!supabaseUrl || !supabaseAnonKey) {
 /**
  * Cliente Supabase configurado para a aplicação
  *
- * Configuração simplificada e confiável para evitar problemas de autenticação
+ * Configuração otimizada para manter sessões estáveis e evitar logouts automáticos
  */
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
@@ -23,11 +23,18 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     flowType: "pkce", // Usar PKCE flow que é mais seguro e confiável
     storage: typeof window !== "undefined" ? window.localStorage : undefined,
     debug: false,
+    // Configurações para manter sessão por mais tempo
+    storageKey: "relusa-auth",
   },
   global: {
     headers: {
       "X-Client-Info": "relusa-webapp",
     },
+  },
+  // Configurações de rede para maior estabilidade
+  realtime: {
+    timeout: 60000, // 60 segundos
+    heartbeatIntervalMs: 30000, // 30 segundos
   },
 });
 
@@ -77,6 +84,21 @@ export type Invoice = {
   user_id: string;
   file_path: string;
   file_name: string;
+  created_at: string;
+  updated_at: string;
+};
+
+export type Review = {
+  id: string;
+  user_id: string;
+  booking_id: string;
+  rating: number;
+  comment?: string;
+  customer_name: string;
+  car_model: string;
+  allow_publication: boolean;
+  is_approved: boolean;
+  is_active: boolean;
   created_at: string;
   updated_at: string;
 };
@@ -225,6 +247,227 @@ export const isUserAdmin = async (userId: string): Promise<boolean> => {
     return !!data;
   } catch (error) {
     console.error("Erro inesperado ao verificar admin:", error);
+    return false;
+  }
+};
+
+// Funções para gestão de reviews
+export const getUserReviews = async (userId: string): Promise<Review[]> => {
+  try {
+    const { data, error } = await supabase
+      .from("reviews")
+      .select("*")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error("Erro ao obter avaliações:", error);
+      return [];
+    }
+
+    return data as Review[];
+  } catch (error) {
+    console.error("Erro inesperado ao obter avaliações:", error);
+    return [];
+  }
+};
+
+export const getBookingReview = async (
+  userId: string,
+  bookingId: string
+): Promise<Review | null> => {
+  try {
+    const { data, error } = await supabase
+      .from("reviews")
+      .select("*")
+      .eq("user_id", userId)
+      .eq("booking_id", bookingId)
+      .single();
+
+    if (error && error.code !== "PGRST116") {
+      console.error("Erro ao obter avaliação:", error);
+      return null;
+    }
+
+    return data as Review | null;
+  } catch (error) {
+    console.error("Erro inesperado ao obter avaliação:", error);
+    return null;
+  }
+};
+
+export const getPublicReviews = async (): Promise<Review[]> => {
+  try {
+    // Sempre usar API route para consistência
+    const response = await fetch('/api/reviews/public', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      console.error("Erro ao obter avaliações públicas via API");
+      return [];
+    }
+
+    const data = await response.json();
+    return data.reviews as Review[];
+  } catch (error) {
+    console.error("Erro inesperado ao obter avaliações públicas:", error);
+    return [];
+  }
+};
+
+export const createReview = async (
+  bookingId: string,
+  rating: number,
+  comment: string,
+  allowPublication: boolean
+): Promise<Review | null> => {
+  try {
+    // Primeiro, obter o utilizador autenticado
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    
+    if (authError || !user) {
+      console.error("Erro de autenticação:", authError);
+      return null;
+    }
+
+    // Obter dados do booking para preencher automaticamente
+    const { data: booking, error: bookingError } = await supabase
+      .from("bookings")
+      .select("*, users(name)")
+      .eq("id", bookingId)
+      .single();
+
+    if (bookingError || !booking) {
+      console.error("Erro ao obter dados da marcação:", bookingError);
+      return null;
+    }
+
+    // Verificar se o booking pertence ao utilizador autenticado
+    if (booking.user_id !== user.id) {
+      console.error("Utilizador não autorizado para esta marcação");
+      return null;
+    }
+
+    // Verificar se o serviço foi concluído
+    if (booking.status !== 'completed') {
+      console.error("Só é possível avaliar serviços concluídos");
+      return null;
+    }
+
+    // Verificar se já existe uma avaliação para esta marcação
+    const existingReview = await getBookingReview(user.id, bookingId);
+    if (existingReview) {
+      console.error("Já existe uma avaliação para esta marcação");
+      return null;
+    }
+
+    const { data, error } = await supabase
+      .from("reviews")
+      .insert([
+        {
+          user_id: user.id,
+          booking_id: bookingId,
+          rating,
+          comment: comment.trim() || null,
+          customer_name: booking.users?.name || "Cliente",
+          car_model: booking.car_model,
+          allow_publication: allowPublication,
+        },
+      ])
+      .select()
+      .single();
+
+    if (error) {
+      console.error("Erro ao criar avaliação:", error);
+      return null;
+    }
+
+    return data as Review;
+  } catch (error) {
+    console.error("Erro inesperado ao criar avaliação:", error);
+    return null;
+  }
+};
+
+export const getAllReviews = async (): Promise<Review[]> => {
+  try {
+    const { data, error } = await supabase
+      .from("reviews")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error("Erro ao obter todas as avaliações:", error);
+      return [];
+    }
+
+    return data as Review[];
+  } catch (error) {
+    console.error("Erro inesperado ao obter todas as avaliações:", error);
+    return [];
+  }
+};
+
+export const updateReviewStatus = async (
+  reviewId: string,
+  isApproved?: boolean,
+  isActive?: boolean
+): Promise<boolean> => {
+  try {
+    const updateData: Partial<Review> = {};
+    
+    if (isApproved !== undefined) updateData.is_approved = isApproved;
+    if (isActive !== undefined) updateData.is_active = isActive;
+
+    // Para operações administrativas, usar RPC ou bypass RLS
+    const { error } = await supabase
+      .from("reviews")
+      .update(updateData)
+      .eq("id", reviewId);
+
+    if (error) {
+      console.error("Erro ao atualizar status da avaliação:", error);
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.error("Erro inesperado ao atualizar status da avaliação:", error);
+    return false;
+  }
+};
+
+export const updateReview = async (
+  reviewId: string,
+  customerName: string,
+  carModel: string,
+  rating: number,
+  comment: string
+): Promise<boolean> => {
+  try {
+    const { error } = await supabase
+      .from("reviews")
+      .update({
+        customer_name: customerName,
+        car_model: carModel,
+        rating,
+        comment: comment.trim() || null,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", reviewId);
+
+    if (error) {
+      console.error("Erro ao atualizar avaliação:", error);
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.error("Erro inesperado ao atualizar avaliação:", error);
     return false;
   }
 };

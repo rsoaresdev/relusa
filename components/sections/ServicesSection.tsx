@@ -195,12 +195,12 @@ export default function ServicesSection() {
                   <span className="text-primary">Programa de Fidelidade</span>
                 </h3>
                 <p className="text-lg text-muted-foreground leading-relaxed">
-                  Na 5ª lavagem, obtém{" "}
+                  Na 5ª lavagem, tem{" "}
                   <span className="font-bold text-primary bg-primary/10 px-2 py-1 rounded">
                     50% de desconto
                   </span>{" "}
-                  em qualquer serviço! Cada marcação conta para o seu programa
-                  de fidelidade e todos os clientes são automaticamente
+                  aplicado automaticamente! Cada marcação conta para o seu
+                  programa de fidelidade e todos os clientes são automaticamente
                   incluídos.
                 </p>
               </div>

@@ -12,6 +12,7 @@ type EmailType =
   | "booking_rescheduled"
   | "service_started"
   | "service_completed"
+  | "service_completed_with_review_request"
   | "loyalty_reminder"
   | "admin_new_booking"
   | "admin_booking_cancelled";
@@ -107,6 +108,16 @@ export const useEmailService = () => {
     return await sendEmail({ type: "service_completed", data: booking });
   };
 
+  const sendServiceCompletedWithReviewRequestEmail = async (
+    booking: Booking
+  ) => {
+    // Usar endpoint API em vez de importar diretamente o service
+    return await sendEmail({
+      type: "service_completed_with_review_request",
+      data: booking,
+    });
+  };
+
   const sendLoyaltyReminderEmail = async (userId: string) => {
     if (!userId) {
       return {
@@ -180,6 +191,7 @@ export const useEmailService = () => {
     sendBookingRescheduledEmail,
     sendServiceStartedEmail,
     sendServiceCompletedEmail,
+    sendServiceCompletedWithReviewRequestEmail,
     sendLoyaltyReminderEmail,
     sendAdminNewBookingNotification,
     sendAdminBookingCancelledNotification,

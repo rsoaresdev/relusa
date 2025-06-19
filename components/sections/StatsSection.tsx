@@ -64,7 +64,7 @@ export default function StatsSection() {
   };
 
   // Calcular CO2 poupado (400g por lavagem)
-  const co2Saved = stats.totalBookings * 0.4; // 400g = 0.4kg
+  const co2Saved = Math.round(stats.totalBookings * 0.4 * 10) / 10; // 400g = 0.4kg, arredondado a 1 casa decimal
 
   return (
     <section id="stats" className="py-24 bg-muted/30">

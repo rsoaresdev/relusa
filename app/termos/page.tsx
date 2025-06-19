@@ -11,6 +11,7 @@ import {
   FileEdit,
   Mail,
   Car,
+  Star,
 } from "lucide-react";
 
 export const metadata = {
@@ -76,6 +77,12 @@ export default function TermosPage() {
                 className="text-gray-700 dark:text-gray-300 hover:text-primary transition-colors"
               >
                 Programa de Fidelidade
+              </a>
+              <a
+                href="#avaliacoes"
+                className="text-gray-700 dark:text-gray-300 hover:text-primary transition-colors"
+              >
+                Avaliações
               </a>
               <a
                 href="#responsabilidades"
@@ -155,6 +162,15 @@ export default function TermosPage() {
                       >
                         <ArrowRight className="w-4 h-4 mr-2" />
                         Programa de Fidelidade
+                      </a>
+                    </li>
+                    <li>
+                      <a
+                        href="#avaliacoes"
+                        className="flex items-center text-gray-700 dark:text-gray-300 hover:text-primary transition-colors"
+                      >
+                        <ArrowRight className="w-4 h-4 mr-2" />
+                        Sistema de Avaliações
                       </a>
                     </li>
                     <li>
@@ -509,13 +525,95 @@ export default function TermosPage() {
                     exclusivos aos nossos clientes regulares:
                   </p>
                   <ul className="pl-6">
-                    <li>A cada 4 lavagens, a próxima tem 50% de desconto</li>
+                    <li>A cada 5 lavagens, a 5ª tem 50% de desconto</li>
                   </ul>
                   <p className="mt-4">Termos do programa de fidelidade:</p>
                   <ul className="pl-6">
                     <li>As lavagens são contabilizadas por conta do cliente</li>
                     <li>O programa não tem prazo de validade</li>
                     <li>Os benefícios são pessoais e intransferíveis</li>
+                  </ul>
+                </div>
+
+                <div
+                  id="avaliacoes"
+                  className="mt-12 pt-6 border-t border-gray-200 dark:border-gray-700 scroll-mt-[160px]"
+                >
+                  <div className="flex items-center mb-2">
+                    <Star className="text-primary mr-2" />
+                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white m-0">
+                      Sistema de Avaliações
+                    </h2>
+                  </div>
+                  <p>
+                    A Relusa implementa um sistema de avaliações para melhorar
+                    continuamente a qualidade dos seus serviços:
+                  </p>
+
+                  <h3 className="text-lg font-semibold mt-4 mb-2">
+                    Submissão de Avaliações
+                  </h3>
+                  <ul className="pl-6 mb-4">
+                    <li>
+                      Apenas clientes que completaram um serviço podem avaliar
+                    </li>
+                    <li>
+                      As avaliações incluem classificação de 1 a 5 estrelas
+                    </li>
+                    <li>
+                      É possível adicionar um comentário opcional (máximo 50
+                      caracteres)
+                    </li>
+                    <li>
+                      O cliente pode autorizar a publicação da avaliação na
+                      página inicial
+                    </li>
+                    <li>
+                      Avaliações publicadas estão sujeitas a aprovação prévia
+                      pela administração
+                    </li>
+                  </ul>
+
+                  <h3 className="text-lg font-semibold mt-4 mb-2">
+                    Política de Edição e Remoção
+                  </h3>
+                  <ul className="pl-6 mb-4">
+                    <li>
+                      <strong>
+                        As avaliações não podem ser editadas após submissão
+                      </strong>
+                    </li>
+                    <li>
+                      <strong>
+                        As avaliações não podem ser apagadas pelo cliente
+                      </strong>
+                    </li>
+                    <li>
+                      Esta política garante a autenticidade e transparência do
+                      sistema
+                    </li>
+                    <li>
+                      Apenas a administração pode moderar avaliações por motivos
+                      de adequação
+                    </li>
+                  </ul>
+
+                  <h3 className="text-lg font-semibold mt-4 mb-2">
+                    Utilização das Avaliações
+                  </h3>
+                  <ul className="pl-6 mb-4">
+                    <li>
+                      Avaliações aprovadas podem ser exibidas publicamente no
+                      website
+                    </li>
+                    <li>
+                      As avaliações ajudam outros clientes na tomada de decisão
+                    </li>
+                    <li>Utilizamos feedback para melhorar nossos serviços</li>
+                    <li>
+                      Reservamo-nos o direito de não publicar avaliações
+                      inadequadas
+                    </li>
                   </ul>
                 </div>
 

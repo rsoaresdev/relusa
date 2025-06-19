@@ -7,6 +7,7 @@ import {
   sendBookingRescheduledEmail,
   sendServiceStartedEmail,
   sendServiceCompletedEmail,
+  sendServiceCompletedWithReviewRequestEmail,
   sendLoyaltyReminderEmail,
   sendContactFormEmail,
   sendAdminNewBookingNotification,
@@ -54,8 +55,10 @@ export async function POST(request: Request) {
     if (isUserRequest) {
       try {
         const token = authHeader.replace("Bearer ", "");
-        const { data: { user } } = await supabaseAdmin.auth.getUser(token);
-        
+        const {
+          data: { user },
+        } = await supabaseAdmin.auth.getUser(token);
+
         if (user) {
           // Verificar se o usuário é admin
           const { data: adminData } = await supabaseAdmin
@@ -63,7 +66,7 @@ export async function POST(request: Request) {
             .select("*")
             .eq("user_id", user.id)
             .single();
-          
+
           isAdminUser = !!adminData;
         }
       } catch (error) {
@@ -121,6 +124,9 @@ export async function POST(request: Request) {
       case "service_completed":
         result = await sendServiceCompletedEmail(data);
         break;
+      case "service_completed_with_review_request":
+        result = await sendServiceCompletedWithReviewRequestEmail(data);
+        break;
       case "loyalty_reminder":
         if (!data.userId) {
           return NextResponse.json(
@@ -154,11 +160,14 @@ export async function POST(request: Request) {
         // Verificar se o usuário é admin para envio de faturas
         if (!isAdminUser && !isSystemRequest) {
           return NextResponse.json(
-            { error: "Acesso negado. Apenas administradores podem enviar faturas." },
+            {
+              error:
+                "Acesso negado. Apenas administradores podem enviar faturas.",
+            },
             { status: 403 }
           );
         }
-        
+
         if (!data.booking_id || !data.file_path) {
           console.error("[API] Dados de fatura incompletos:", data);
           return NextResponse.json(

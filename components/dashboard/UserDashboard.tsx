@@ -240,7 +240,7 @@ export default function UserDashboard({
           </div>
         </CardHeader>
         <CardContent className="p-6">
-          {loyaltyProgress.hasDiscount ? (
+          {loyaltyProgress.almostDiscount ? (
             <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border border-green-200 dark:border-green-900/30 rounded-lg p-4 mb-6 flex items-center">
               <div className="bg-green-100 dark:bg-green-800/30 p-2 rounded-full mr-3">
                 <Gift
@@ -258,7 +258,7 @@ export default function UserDashboard({
                 </p>
               </div>
             </div>
-          ) : loyaltyProgress.almostDiscount ? (
+          ) : loyaltyProgress.hasDiscount ? (
             <div className="bg-gradient-to-r from-amber-50 to-yellow-50 dark:from-amber-900/20 dark:to-yellow-900/20 border border-amber-200 dark:border-amber-900/30 rounded-lg p-4 mb-6 flex items-center">
               <div className="bg-amber-100 dark:bg-amber-800/30 p-2 rounded-full mr-3">
                 <PartyPopper
@@ -268,11 +268,11 @@ export default function UserDashboard({
               </div>
               <div>
                 <h5 className="font-medium text-amber-800 dark:text-amber-300 text-lg">
-                  PRÓXIMA LAVAGEM COM DESCONTO!
+                  DESCONTO JÁ USADO - NOVO CICLO!
                 </h5>
                 <p className="text-amber-700 dark:text-amber-400">
-                  <span className="font-bold">50% DE DESCONTO</span> na sua
-                  próxima marcação!
+                  Utilizou o seu desconto de 50%! Começou um novo ciclo de
+                  fidelidade.
                 </p>
               </div>
             </div>

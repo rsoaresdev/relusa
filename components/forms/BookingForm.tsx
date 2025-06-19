@@ -401,8 +401,8 @@ export default function BookingForm({ session, onCancel }: BookingFormProps) {
           {hasDiscount && (
             <div className="mt-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-900/30 rounded-lg p-3">
               <p className="text-sm text-green-800 dark:text-green-300 font-medium">
-                Parabéns! Você atingiu a 5ª lavagem e ganhou 50% de desconto
-                nesta marcação.
+                Parabéns! Tem direito ao desconto de fidelidade de 50% nesta
+                marcação.
               </p>
             </div>
           )}
