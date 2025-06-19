@@ -89,7 +89,9 @@ export default function RootLayout({
         <link rel="apple-touch-icon" href="/apple-icon.png" />
         <link rel="manifest" href="/manifest.json" />
       </head>
-      <body className={`${inter.variable} ${poppins.variable} antialiased`}>
+      <body
+        className={`${inter.variable} ${poppins.variable} antialiased overflow-x-hidden`}
+      >
         <ThemeProvider
           attribute="class"
           defaultTheme="light"
@@ -102,7 +104,7 @@ export default function RootLayout({
             <Analytics />
             <SpeedInsights />
             <Toaster richColors closeButton />
-            <main className="min-h-screen">{children}</main>
+            <main className="min-h-screen overflow-x-hidden">{children}</main>
             <Footer />
             <CookieConsent />
           </AuthProvider>

@@ -10,46 +10,51 @@ interface UseAuthReturn {
   signOut: () => Promise<void>;
 }
 
-// Estado global simplificado para evitar múltiplas verificações
-let globalAuthState = {
+// Estado global com controle mais rigoroso
+const globalAuthState = {
   user: null as User | null,
   isAdmin: false,
   lastCheck: 0,
   isInitializing: false,
+  initialized: false,
 };
 
-const CACHE_DURATION = 30 * 1000; // 30 segundos
-const LOADING_TIMEOUT = 10 * 1000; // 10 segundos timeout máximo
+const CACHE_DURATION = 60 * 1000; // 1 minuto
+const LOADING_TIMEOUT = 5 * 1000; // 5 segundos timeout máximo
 
 export const useAuth = (): UseAuthReturn => {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [user, setUser] = useState<User | null>(globalAuthState.user);
+  const [loading, setLoading] = useState(!globalAuthState.initialized);
+  const [isAdmin, setIsAdmin] = useState(globalAuthState.isAdmin);
   const [error, setError] = useState<string | null>(null);
 
   const isMountedRef = useRef(true);
   const loadingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const initializationRef = useRef(false);
+  const retryTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Timeout de segurança para evitar loading infinito
+  // Timeout de segurança mais agressivo
   const startLoadingTimeout = useCallback(() => {
     if (loadingTimeoutRef.current) {
       clearTimeout(loadingTimeoutRef.current);
     }
 
     loadingTimeoutRef.current = setTimeout(() => {
-      if (isMountedRef.current && loading) {
-        console.warn("Timeout de autenticação atingido, parando loading");
+      if (isMountedRef.current) {
+        console.warn("Timeout de autenticação atingido");
         setLoading(false);
-        setError("Timeout na verificação de autenticação");
+        globalAuthState.initialized = true;
       }
     }, LOADING_TIMEOUT);
-  }, [loading]);
+  }, []);
 
-  const clearLoadingTimeout = useCallback(() => {
+  const clearTimeouts = useCallback(() => {
     if (loadingTimeoutRef.current) {
       clearTimeout(loadingTimeoutRef.current);
       loadingTimeoutRef.current = null;
+    }
+    if (retryTimeoutRef.current) {
+      clearTimeout(retryTimeoutRef.current);
+      retryTimeoutRef.current = null;
     }
   }, []);
 
@@ -58,28 +63,70 @@ export const useAuth = (): UseAuthReturn => {
       userId: string
     ): Promise<{ user: User; isAdmin: boolean } | null> => {
       try {
-        // Procurar dados do utilizador
-        const { data: userData, error: userError } = await supabase
-          .from("users")
-          .select("*")
-          .eq("id", userId)
-          .single();
+        // Obter dados em paralelo para melhor performance
+        const [userResponse, adminResponse] = await Promise.all([
+          supabase.from("users").select("*").eq("id", userId).single(),
+          supabase.from("admins").select("id").eq("user_id", userId).single(),
+        ]);
 
-        if (userError || !userData) {
-          console.error("Erro ao obter dados do utilizador:", userError);
+        // Se o utilizador não existe, criar
+        if (userResponse.error?.code === "PGRST116") {
+          // Obter dados da sessão atual para criar o utilizador
+          const { data: sessionData } = await supabase.auth.getSession();
+          const sessionUser = sessionData.session?.user;
+
+          if (sessionUser) {
+            const newUser = {
+              id: userId,
+              email: sessionUser.email || "",
+              name:
+                sessionUser.user_metadata?.full_name ||
+                sessionUser.user_metadata?.name ||
+                "Utilizador",
+              phone: "",
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+            };
+
+            // Criar utilizador
+            const { data: createdUser, error: createError } = await supabase
+              .from("users")
+              .insert([newUser])
+              .select()
+              .single();
+
+            if (createError) {
+              console.error("Erro ao criar utilizador:", createError);
+              return null;
+            }
+
+            // Criar pontos de fidelidade
+            await supabase.from("loyalty_points").insert([
+              {
+                user_id: userId,
+                points: 0,
+                bookings_count: 0,
+              },
+            ]);
+
+            return {
+              user: createdUser as User,
+              isAdmin: !!adminResponse.data,
+            };
+          }
+        }
+
+        if (userResponse.error || !userResponse.data) {
+          console.error(
+            "Erro ao obter dados do utilizador:",
+            userResponse.error
+          );
           return null;
         }
 
-        // Verificar se é admin
-        const { data: adminData } = await supabase
-          .from("admins")
-          .select("id")
-          .eq("user_id", userId)
-          .single();
-
         return {
-          user: userData as User,
-          isAdmin: !!adminData,
+          user: userResponse.data as User,
+          isAdmin: !!adminResponse.data,
         };
       } catch (error) {
         console.error("Erro ao procurar perfil do utilizador:", error);
@@ -90,17 +137,20 @@ export const useAuth = (): UseAuthReturn => {
   );
 
   const updateAuthState = useCallback(
-    (newUser: User | null, newIsAdmin: boolean) => {
+    (newUser: User | null, newIsAdmin: boolean, skipGlobalUpdate = false) => {
       if (!isMountedRef.current) return;
 
       setUser(newUser);
       setIsAdmin(newIsAdmin);
       setError(null);
+      setLoading(false);
 
-      // Atualizar estado global
-      globalAuthState.user = newUser;
-      globalAuthState.isAdmin = newIsAdmin;
-      globalAuthState.lastCheck = Date.now();
+      if (!skipGlobalUpdate) {
+        globalAuthState.user = newUser;
+        globalAuthState.isAdmin = newIsAdmin;
+        globalAuthState.lastCheck = Date.now();
+        globalAuthState.initialized = true;
+      }
     },
     []
   );
@@ -109,33 +159,43 @@ export const useAuth = (): UseAuthReturn => {
     async (forceRefresh = false) => {
       if (!isMountedRef.current) return;
 
-      // Evitar múltiplas inicializações simultâneas
+      // Evitar múltiplas inicializações
       if (globalAuthState.isInitializing && !forceRefresh) {
         return;
       }
 
-      // Usar cache se válido e não forçar refresh
+      // Usar cache se válido
       const now = Date.now();
       if (
         !forceRefresh &&
+        globalAuthState.initialized &&
         globalAuthState.user &&
         now - globalAuthState.lastCheck < CACHE_DURATION
       ) {
-        updateAuthState(globalAuthState.user, globalAuthState.isAdmin);
+        updateAuthState(globalAuthState.user, globalAuthState.isAdmin, true);
         return;
       }
 
       globalAuthState.isInitializing = true;
-      startLoadingTimeout();
+
+      if (!forceRefresh) {
+        startLoadingTimeout();
+      }
 
       try {
         setError(null);
+        if (forceRefresh) setLoading(true);
 
-        // Verificar sessão
-        const {
-          data: { session },
-          error: sessionError,
-        } = await supabase.auth.getSession();
+        // Verificar sessão com timeout
+        const sessionPromise = supabase.auth.getSession();
+        const timeoutPromise = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error("Session timeout")), 3000)
+        );
+
+        const { data, error: sessionError } = (await Promise.race([
+          sessionPromise,
+          timeoutPromise,
+        ])) as any;
 
         if (sessionError) {
           console.error("Erro ao verificar sessão:", sessionError);
@@ -143,13 +203,13 @@ export const useAuth = (): UseAuthReturn => {
           return;
         }
 
-        if (!session?.user) {
+        if (!data.session?.user) {
           updateAuthState(null, false);
           return;
         }
 
         // Procurar dados do utilizador
-        const userProfile = await fetchUserProfile(session.user.id);
+        const userProfile = await fetchUserProfile(data.session.user.id);
 
         if (userProfile) {
           updateAuthState(userProfile.user, userProfile.isAdmin);
@@ -164,46 +224,32 @@ export const useAuth = (): UseAuthReturn => {
         }
       } finally {
         globalAuthState.isInitializing = false;
-        clearLoadingTimeout();
-        if (isMountedRef.current) {
-          setLoading(false);
-        }
+        clearTimeouts();
       }
     },
-    [
-      updateAuthState,
-      fetchUserProfile,
-      startLoadingTimeout,
-      clearLoadingTimeout,
-    ]
+    [updateAuthState, fetchUserProfile, startLoadingTimeout, clearTimeouts]
   );
 
   const refreshUser = useCallback(async () => {
     if (!isMountedRef.current) return;
-    setLoading(true);
     await validateAndLoadUser(true);
   }, [validateAndLoadUser]);
 
   const signOut = useCallback(async () => {
     try {
-      // Limpar estado local e global
+      clearTimeouts();
+
+      // Limpar estado imediatamente
       updateAuthState(null, false);
-      globalAuthState = {
-        user: null,
-        isAdmin: false,
-        lastCheck: 0,
-        isInitializing: false,
-      };
+      globalAuthState.user = null;
+      globalAuthState.isAdmin = false;
+      globalAuthState.lastCheck = 0;
+      globalAuthState.initialized = true;
 
       clearUserCache();
-      clearLoadingTimeout();
 
       // Fazer logout no Supabase
-      const { error } = await supabase.auth.signOut();
-
-      if (error) {
-        console.error("Erro ao fazer logout:", error);
-      }
+      await supabase.auth.signOut();
 
       // Limpar localStorage
       if (typeof window !== "undefined") {
@@ -221,25 +267,27 @@ export const useAuth = (): UseAuthReturn => {
         }
       }
 
-      // Redirecionar para home
+      // Redirecionar
       if (typeof window !== "undefined") {
         window.location.href = "/";
       }
     } catch (error) {
-      console.error("Erro inesperado no logout:", error);
+      console.error("Erro no logout:", error);
       if (typeof window !== "undefined") {
         window.location.href = "/";
       }
     }
-  }, [updateAuthState, clearLoadingTimeout]);
+  }, [updateAuthState, clearTimeouts]);
 
   // Inicialização do hook
   useEffect(() => {
     isMountedRef.current = true;
 
-    // Evitar dupla inicialização
-    if (initializationRef.current) return;
-    initializationRef.current = true;
+    // Se já foi inicializado, usar estado global
+    if (globalAuthState.initialized) {
+      updateAuthState(globalAuthState.user, globalAuthState.isAdmin, true);
+      return;
+    }
 
     // Inicializar autenticação
     validateAndLoadUser();
@@ -255,19 +303,13 @@ export const useAuth = (): UseAuthReturn => {
 
         if (event === "SIGNED_OUT" || !session?.user) {
           updateAuthState(null, false);
-          setLoading(false);
         } else if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
-          // Procurar dados do utilizador
           const userProfile = await fetchUserProfile(session.user.id);
 
           if (userProfile && isMountedRef.current) {
             updateAuthState(userProfile.user, userProfile.isAdmin);
           } else if (isMountedRef.current) {
             updateAuthState(null, false);
-          }
-
-          if (isMountedRef.current) {
-            setLoading(false);
           }
         }
       } catch (error) {
@@ -281,11 +323,10 @@ export const useAuth = (): UseAuthReturn => {
 
     return () => {
       isMountedRef.current = false;
-      initializationRef.current = false;
-      clearLoadingTimeout();
+      clearTimeouts();
       subscription.unsubscribe();
     };
-  }, []); // Dependências vazias para executar apenas uma vez
+  }, [validateAndLoadUser, updateAuthState, fetchUserProfile, clearTimeouts]);
 
   return {
     user,

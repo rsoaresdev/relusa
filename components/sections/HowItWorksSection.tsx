@@ -76,40 +76,44 @@ export default function HowItWorksSection() {
   }, []);
 
   return (
-    <section id="como-funciona" className="py-24 bg-background">
-      <div className="container mx-auto px-6">
-        <div className="text-center mb-16 max-w-3xl mx-auto">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">
+    <section
+      id="como-funciona"
+      className="py-12 md:py-20 lg:py-24 bg-background overflow-hidden"
+    >
+      <div className="container mx-auto px-4 md:px-6 max-w-7xl">
+        {/* Header */}
+        <div className="text-center mb-12 md:mb-16 max-w-3xl mx-auto">
+          <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold mb-3 md:mb-4">
             Como <span className="text-primary">Funciona</span>
           </h2>
-          <p className="text-lg text-muted-foreground leading-relaxed">
+          <p className="text-base md:text-lg text-muted-foreground leading-relaxed">
             A nossa lavagem a seco é um processo inovador e ecológico que deixa
             o seu carro impecável sem desperdício de água.
           </p>
         </div>
 
         {/* Process Steps */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-20">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-12 md:mb-16 lg:mb-20">
           {steps.map((step, index) => (
             <div
               key={step.id}
-              className={`group p-8 rounded-2xl bg-card border border-border/50 hover:border-border shadow-sm hover:shadow-md transition-all duration-500 ${
+              className={`group p-4 md:p-6 lg:p-8 rounded-2xl bg-card border border-border/50 hover:border-border shadow-sm hover:shadow-md transition-all duration-500 ${
                 isVisible
                   ? "opacity-100 translate-y-0"
                   : "opacity-0 translate-y-10"
               }`}
               style={{ transitionDelay: `${index * 100}ms` }}
             >
-              <div className="space-y-4">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-primary/15 transition-colors">
+              <div className="space-y-3 md:space-y-4">
+                <div className="flex items-center gap-3 md:gap-4">
+                  <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-primary/15 transition-colors flex-shrink-0">
                     {step.icon}
                   </div>
-                  <span className="text-2xl font-bold text-primary">
+                  <span className="text-xl md:text-2xl font-bold text-primary">
                     {step.id}
                   </span>
                 </div>
-                <h3 className="text-xl font-semibold text-foreground">
+                <h3 className="text-lg md:text-xl font-semibold text-foreground">
                   {step.title}
                 </h3>
                 <p className="text-sm text-muted-foreground leading-relaxed">
@@ -121,7 +125,7 @@ export default function HowItWorksSection() {
         </div>
 
         {/* Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-12 lg:gap-16 items-center">
           {/* Image Section */}
           <div
             className={`relative transition-all duration-1000 ${
@@ -136,10 +140,11 @@ export default function HowItWorksSection() {
                 alt="Processo de lavagem a seco"
                 fill
                 className="object-cover"
+                sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 50vw"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent flex items-end">
-                <div className="p-6 text-white">
-                  <h3 className="text-xl font-semibold mb-2">
+                <div className="p-4 md:p-6 text-white">
+                  <h3 className="text-lg md:text-xl font-semibold mb-1 md:mb-2">
                     Lavagem a Seco Profissional
                   </h3>
                   <p className="text-sm text-gray-200">
@@ -152,39 +157,39 @@ export default function HowItWorksSection() {
 
           {/* Benefits Section */}
           <div
-            className={`space-y-8 transition-all duration-1000 delay-300 ${
+            className={`space-y-6 md:space-y-8 transition-all duration-1000 delay-300 ${
               isVisible
                 ? "opacity-100 translate-x-0"
                 : "opacity-0 translate-x-10"
             }`}
           >
-            <div className="space-y-4">
-              <h3 className="text-2xl font-bold text-foreground">
+            <div className="space-y-3 md:space-y-4">
+              <h3 className="text-xl md:text-2xl font-bold text-foreground">
                 Vantagens da Lavagem a Seco
               </h3>
-              <p className="text-muted-foreground leading-relaxed">
+              <p className="text-sm md:text-base text-muted-foreground leading-relaxed">
                 A nossa tecnologia de lavagem a seco oferece inúmeras vantagens
                 em relação às lavagens tradicionais, sendo mais ecológica e
                 prática.
               </p>
             </div>
 
-            <div className="space-y-6">
+            <div className="space-y-4 md:space-y-6">
               {benefits.map((benefit, index) => (
                 <div
                   key={index}
-                  className={`flex items-start space-x-4 transition-all duration-700 ${
+                  className={`flex items-start space-x-3 md:space-x-4 transition-all duration-700 ${
                     isVisible
                       ? "opacity-100 translate-y-0"
                       : "opacity-0 translate-y-10"
                   }`}
                   style={{ transitionDelay: `${(index + 4) * 100}ms` }}
                 >
-                  <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                  <div className="w-8 h-8 md:w-10 md:h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
                     {benefit.icon}
                   </div>
-                  <div className="space-y-1">
-                    <h4 className="text-lg font-semibold text-foreground">
+                  <div className="space-y-1 min-w-0">
+                    <h4 className="text-base md:text-lg font-semibold text-foreground">
                       {benefit.title}
                     </h4>
                     <p className="text-sm text-muted-foreground leading-relaxed">
@@ -195,7 +200,7 @@ export default function HowItWorksSection() {
               ))}
             </div>
 
-            <div className="p-6 bg-muted/50 rounded-xl border border-border/50">
+            <div className="p-4 md:p-6 bg-muted/50 rounded-xl border border-border/50">
               <p className="text-sm text-muted-foreground leading-relaxed">
                 <strong className="text-foreground">Nota:</strong> Para lavagens
                 interiores, necessitamos apenas da chave do veículo, sem

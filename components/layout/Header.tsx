@@ -38,20 +38,22 @@ export default function Header() {
           : "bg-transparent"
       }`}
     >
-      <div className="container mx-auto px-6">
+      <div className="container mx-auto px-4 md:px-6 max-w-7xl">
         <div className="flex items-center justify-between h-20">
           {/* Logo */}
           <Link href="/" className="flex items-center space-x-3 group">
-            <Image
-              src="/svg_green.svg"
-              alt="Relusa Logo"
-              width={40}
-              height={40}
-              className="w-10 h-10 transition-transform group-hover:scale-105"
-            />
+            <div className="w-10 h-12 flex items-center justify-center">
+              <Image
+                src="/svg_green.svg"
+                alt="Relusa Logo"
+                width={40}
+                height={48}
+                className="max-w-full max-h-full transition-transform group-hover:scale-105 object-contain"
+              />
+            </div>
             <div className="flex flex-col">
-              <span className="font-bold text-xl text-foreground">Relusa</span>
-              <span className="text-xs text-muted-foreground font-medium -mt-1">
+              <span className="font-bold text-lg text-foreground">Relusa</span>
+              <span className="text-xs text-muted-foreground font-medium -mt-0.5">
                 O seu carro não recusa
               </span>
             </div>
@@ -73,33 +75,31 @@ export default function Header() {
 
           {/* Desktop Actions */}
           <div className="hidden lg:flex items-center space-x-4">
-            {!loading && (
-              <>
-                {user ? (
-                  <div className="flex items-center space-x-3">
-                    <Button
-                      className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-xl transition-all duration-300 font-semibold px-6"
-                      asChild
-                    >
-                      <Link href="/marcacoes">
-                        <Calendar size={18} />
-                        Nova Marcação
-                      </Link>
-                    </Button>
-                    <ProfileDropdown />
-                  </div>
-                ) : (
-                  <Button
-                    className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-xl transition-all duration-300 font-semibold px-6"
-                    asChild
-                  >
-                    <Link href="/marcacoes">
-                      <Calendar size={18} />
-                      Fazer Marcação
-                    </Link>
-                  </Button>
-                )}
-              </>
+            {/* Mostrar botão imediatamente, mesmo durante loading */}
+            {user ? (
+              <div className="flex items-center space-x-3">
+                <Button
+                  className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-xl transition-all duration-300 font-semibold px-6"
+                  asChild
+                >
+                  <Link href="/marcacoes">
+                    <Calendar size={18} />
+                    Nova Marcação
+                  </Link>
+                </Button>
+                <ProfileDropdown />
+              </div>
+            ) : (
+              <Button
+                className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-xl transition-all duration-300 font-semibold px-6"
+                asChild
+                disabled={loading}
+              >
+                <Link href="/marcacoes">
+                  <Calendar size={18} />
+                  {loading ? "A carregar..." : "Fazer Marcação"}
+                </Link>
+              </Button>
             )}
           </div>
 
@@ -133,54 +133,51 @@ export default function Header() {
               ))}
 
               <div className="pt-4 space-y-3">
-                {!loading && (
+                {user ? (
                   <>
-                    {user ? (
-                      <>
-                        <Button
-                          size="lg"
-                          className="w-full gap-2 bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg font-semibold"
-                          asChild
-                        >
-                          <Link
-                            href="/marcacoes"
-                            onClick={() => setMobileMenuOpen(false)}
-                          >
-                            <Calendar size={18} />
-                            Nova Marcação
-                          </Link>
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="lg"
-                          className="w-full gap-2"
-                          asChild
-                        >
-                          <Link
-                            href="/perfil"
-                            onClick={() => setMobileMenuOpen(false)}
-                          >
-                            <User size={18} />
-                            Meu Perfil
-                          </Link>
-                        </Button>
-                      </>
-                    ) : (
-                      <Button
-                        size="lg"
-                        className="w-full gap-2 bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg font-semibold"
-                        asChild
+                    <Button
+                      size="lg"
+                      className="w-full gap-2 bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg font-semibold"
+                      asChild
+                    >
+                      <Link
+                        href="/marcacoes"
+                        onClick={() => setMobileMenuOpen(false)}
                       >
-                        <Link
-                          href="/marcacoes"
-                          onClick={() => setMobileMenuOpen(false)}
-                        >
-                          <Calendar size={18} />
-                          Fazer Marcação
-                        </Link>
-                      </Button>
-                    )}
+                        <Calendar size={18} />
+                        Nova Marcação
+                      </Link>
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="lg"
+                      className="w-full gap-2"
+                      asChild
+                    >
+                      <Link
+                        href="/perfil"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        <User size={18} />
+                        Meu Perfil
+                      </Link>
+                    </Button>
                   </>
+                ) : (
+                  <Button
+                    size="lg"
+                    className="w-full gap-2 bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg font-semibold"
+                    asChild
+                    disabled={loading}
+                  >
+                    <Link
+                      href="/marcacoes"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      <Calendar size={18} />
+                      {loading ? "A carregar..." : "Fazer Marcação"}
+                    </Link>
+                  </Button>
                 )}
               </div>
             </div>
