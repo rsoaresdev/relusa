@@ -28,13 +28,9 @@ interface AuthProviderProps {
 }
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {
-  const { user, loading, isAdmin, error, signOut, refreshUser } = useAuth();
+  const authData = useAuth();
 
   return (
-    <AuthContext.Provider
-      value={{ user, loading, isAdmin, error, signOut, refreshUser }}
-    >
-      {children}
-    </AuthContext.Provider>
+    <AuthContext.Provider value={authData}>{children}</AuthContext.Provider>
   );
 };

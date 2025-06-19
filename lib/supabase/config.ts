@@ -13,22 +13,16 @@ if (!supabaseUrl || !supabaseAnonKey) {
 /**
  * Cliente Supabase configurado para a aplicação
  *
- * Configurações otimizadas:
- * - persistSession: true - Mantém a sessão no localStorage
- * - autoRefreshToken: true - Renova automaticamente os tokens
- * - detectSessionInUrl: true - Processa URLs de callback automaticamente
- * - flowType: 'implicit' - Usar implicit flow para compatibilidade com OAuth
- * - debug: false - Desativa logs desnecessários
+ * Configuração simplificada e confiável para evitar problemas de autenticação
  */
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     persistSession: true,
     autoRefreshToken: true,
     detectSessionInUrl: true,
-    flowType: "implicit", // Voltar para implicit para OAuth funcionar
+    flowType: "pkce", // Usar PKCE flow que é mais seguro e confiável
     storage: typeof window !== "undefined" ? window.localStorage : undefined,
-    storageKey: "supabase.auth.token",
-    debug: false, // Desativar debug para eliminar logs excessivos
+    debug: false,
   },
   global: {
     headers: {
@@ -87,49 +81,26 @@ export type Invoice = {
   updated_at: string;
 };
 
-// Cache simples para evitar chamadas desnecessárias
-const userCache = new Map<string, { user: User; timestamp: number }>();
-const CACHE_DURATION = 5 * 60 * 1000; // 5 minutos
-
-// Funções auxiliares otimizadas
+// Funções auxiliares simplificadas
 export const getCurrentUser = async (): Promise<User | null> => {
   try {
     const {
       data: { session },
-      error: sessionError,
     } = await supabase.auth.getSession();
-
-    if (sessionError) {
-      console.error("Erro ao obter sessão:", sessionError);
-      return null;
-    }
 
     if (!session?.user) {
       return null;
     }
 
-    const userId = session.user.id;
-
-    // Verificar cache
-    const cached = userCache.get(userId);
-    if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
-      return cached.user;
-    }
-
-    const { data: user, error: userError } = await supabase
+    const { data: user, error } = await supabase
       .from("users")
       .select("*")
-      .eq("id", userId)
+      .eq("id", session.user.id)
       .single();
 
-    if (userError) {
-      console.error("Erro ao obter dados do utilizador:", userError);
+    if (error) {
+      console.error("Erro ao obter dados do utilizador:", error);
       return null;
-    }
-
-    // Atualizar cache
-    if (user) {
-      userCache.set(userId, { user: user as User, timestamp: Date.now() });
     }
 
     return user as User | null;
@@ -170,7 +141,6 @@ export const getUserLoyalty = async (
       .single();
 
     if (error && error.code !== "PGRST116") {
-      // PGRST116 = no rows returned
       console.error("Erro ao obter pontos de fidelidade:", error);
       return null;
     }
@@ -198,28 +168,6 @@ export const getUserLoyalty = async (
   }
 };
 
-export const isUserAdmin = async (userId: string): Promise<boolean> => {
-  try {
-    const { data, error } = await supabase
-      .from("admins")
-      .select("*")
-      .eq("user_id", userId)
-      .single();
-
-    if (error && error.code !== "PGRST116") {
-      // PGRST116 = no rows returned
-      console.error("Erro ao verificar admin:", error);
-      return false;
-    }
-
-    return !!data;
-  } catch (error) {
-    console.error("Erro inesperado ao verificar admin:", error);
-    return false;
-  }
-};
-
-// Função para limpar cache quando necessário
 export const getUserInvoices = async (userId: string): Promise<Invoice[]> => {
   try {
     const { data, error } = await supabase
@@ -249,55 +197,34 @@ export const getInvoiceSignedUrl = async (
       .createSignedUrl(filePath, 60 * 60); // 1 hora
 
     if (error) {
-      console.error("Erro ao gerar URL da fatura:", error);
+      console.error("Erro ao gerar URL assinada:", error);
       return null;
     }
 
     return data.signedUrl;
   } catch (error) {
-    console.error("Erro inesperado ao gerar URL da fatura:", error);
+    console.error("Erro inesperado ao gerar URL assinada:", error);
     return null;
   }
 };
 
-export const clearUserCache = (userId?: string) => {
-  if (userId) {
-    userCache.delete(userId);
-  } else {
-    userCache.clear();
-  }
-};
-
-// Função centralizada de logout para garantir limpeza completa
-export const performLogout = async (): Promise<void> => {
+export const isUserAdmin = async (userId: string): Promise<boolean> => {
   try {
-    // Limpar cache de utilizadores
-    clearUserCache();
+    const { data, error } = await supabase
+      .from("admins")
+      .select("*")
+      .eq("user_id", userId)
+      .single();
 
-    // Fazer logout no Supabase
-    const { error } = await supabase.auth.signOut();
-
-    if (error) {
-      console.error("Erro ao fazer logout:", error);
+    if (error && error.code !== "PGRST116") {
+      // PGRST116 = no rows returned
+      console.error("Erro ao verificar admin:", error);
+      return false;
     }
 
-    // Limpar localStorage manualmente (backup)
-    if (typeof window !== "undefined") {
-      localStorage.removeItem("supabase.auth.token");
-      localStorage.removeItem(
-        "sb-" + supabaseUrl.split("//")[1].split(".")[0] + "-auth-token"
-      );
-    }
-
-    // Forçar refresh da página para garantir limpeza completa do estado
-    if (typeof window !== "undefined") {
-      window.location.href = "/";
-    }
+    return !!data;
   } catch (error) {
-    console.error("Erro inesperado no logout:", error);
-    // Em caso de erro, forçar refresh mesmo assim
-    if (typeof window !== "undefined") {
-      window.location.href = "/";
-    }
+    console.error("Erro inesperado ao verificar admin:", error);
+    return false;
   }
 };

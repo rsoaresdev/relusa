@@ -1,54 +1,70 @@
-import Link from "next/link";
-import { AlertTriangle, Home, RefreshCw } from "lucide-react";
+"use client";
+
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { AlertCircle, Home, RefreshCw } from "lucide-react";
 
 export default function AuthErrorPage() {
+  const router = useRouter();
+
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center py-16 px-4">
-      <div className="w-full max-w-md">
-        <div className="relative bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden border border-gray-100 dark:border-gray-700">
-          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-red-500 via-orange-400 to-red-500"></div>
-          
-          <div className="p-8 md:p-10">
-            <div className="w-20 h-20 mx-auto bg-red-100 dark:bg-red-900/20 rounded-full flex items-center justify-center mb-6 shadow-md">
-              <AlertTriangle
-                size={36}
-                className="text-red-500 dark:text-red-400"
-              />
+    <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full">
+        <Card className="border-destructive/50">
+          <CardHeader className="text-center">
+            <div className="w-16 h-16 bg-destructive/10 rounded-full flex items-center justify-center mx-auto mb-4">
+              <AlertCircle className="w-8 h-8 text-destructive" />
             </div>
-
-            <h2 className="text-2xl md:text-3xl font-bold text-center text-gray-900 dark:text-white mb-3 font-poppins">
-              Erro na autenticação
-            </h2>
-
-            <div className="h-1 w-16 bg-red-400 mx-auto mb-6 rounded-full"></div>
-
-            <p className="text-gray-600 dark:text-gray-300 text-center mb-8 leading-relaxed">
-              Ocorreu um erro na autenticação. Por favor, tente novamente.
+            <CardTitle className="text-2xl font-bold text-destructive">
+              Erro de Autenticação
+            </CardTitle>
+            <CardDescription>
+              Ocorreu um problema durante o processo de autenticação.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="text-center space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Isto pode acontecer se o link expirou ou se houve um problema
+              temporário com o serviço. Por favor, tente novamente.
             </p>
 
-            <div className="space-y-4">
-              <Link
-                href="/marcacoes"
-                className="w-full bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary transition-all duration-300 py-6 rounded-xl shadow-lg hover:shadow-primary/20 flex items-center justify-center text-white font-medium"
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Button
+                onClick={() => router.push("/marcacoes")}
+                className="w-full"
               >
-                <RefreshCw size={18} className="mr-2" />
-                Tentar novamente
-              </Link>
+                <Home className="w-4 h-4 mr-2" />
+                Tentar Novamente
+              </Button>
 
-              <Link
-                href="/"
-                className="w-full border-2 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-all duration-300 py-6 rounded-xl flex items-center justify-center text-gray-700 dark:text-gray-300 font-medium"
+              <Button
+                variant="outline"
+                onClick={() => window.location.reload()}
+                className="w-full"
               >
-                <Home size={18} className="mr-2" />
-                Ir para o início
-              </Link>
+                <RefreshCw className="w-4 h-4 mr-2" />
+                Recarregar
+              </Button>
             </div>
-            
-            <p className="text-xs text-gray-500 dark:text-gray-400 text-center mt-6">
-              Se o problema persistir, por favor <a href="/contactos" className="text-primary font-semibold underline">contacte o nosso suporte</a>.
+
+            <p className="text-xs text-muted-foreground mt-4">
+              Se o problema persistir, contacte o suporte através de{" "}
+              <a
+                href="mailto:geral@relusa.pt"
+                className="text-primary hover:underline"
+              >
+                geral@relusa.pt
+              </a>
             </p>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

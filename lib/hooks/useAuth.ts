@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { supabase, User, clearUserCache } from "@/lib/supabase/config";
+import { supabase, User } from "@/lib/supabase/config";
+import type { Session, AuthChangeEvent } from "@supabase/supabase-js";
 
 interface UseAuthReturn {
   user: User | null;
@@ -10,68 +11,26 @@ interface UseAuthReturn {
   signOut: () => Promise<void>;
 }
 
-// Estado global com controle mais rigoroso
-const globalAuthState = {
-  user: null as User | null,
-  isAdmin: false,
-  lastCheck: 0,
-  isInitializing: false,
-  initialized: false,
-};
-
-const CACHE_DURATION = 60 * 1000; // 1 minuto
-const LOADING_TIMEOUT = 5 * 1000; // 5 segundos timeout máximo
-
 export const useAuth = (): UseAuthReturn => {
-  const [user, setUser] = useState<User | null>(globalAuthState.user);
-  const [loading, setLoading] = useState(!globalAuthState.initialized);
-  const [isAdmin, setIsAdmin] = useState(globalAuthState.isAdmin);
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const mounted = useRef(true);
 
-  const isMountedRef = useRef(true);
-  const loadingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const retryTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-
-  // Timeout de segurança mais agressivo
-  const startLoadingTimeout = useCallback(() => {
-    if (loadingTimeoutRef.current) {
-      clearTimeout(loadingTimeoutRef.current);
-    }
-
-    loadingTimeoutRef.current = setTimeout(() => {
-      if (isMountedRef.current) {
-        console.warn("Timeout de autenticação atingido");
-        setLoading(false);
-        globalAuthState.initialized = true;
-      }
-    }, LOADING_TIMEOUT);
-  }, []);
-
-  const clearTimeouts = useCallback(() => {
-    if (loadingTimeoutRef.current) {
-      clearTimeout(loadingTimeoutRef.current);
-      loadingTimeoutRef.current = null;
-    }
-    if (retryTimeoutRef.current) {
-      clearTimeout(retryTimeoutRef.current);
-      retryTimeoutRef.current = null;
-    }
-  }, []);
-
+  // Função para buscar perfil do utilizador
   const fetchUserProfile = useCallback(
     async (
       userId: string
     ): Promise<{ user: User; isAdmin: boolean } | null> => {
       try {
-        // Obter dados em paralelo para melhor performance
         const [userResponse, adminResponse] = await Promise.all([
           supabase.from("users").select("*").eq("id", userId).single(),
           supabase.from("admins").select("id").eq("user_id", userId).single(),
         ]);
 
-        // Se o utilizador não existe, criar
+        // Se o utilizador não existe, criar um novo
         if (userResponse.error?.code === "PGRST116") {
-          // Obter dados da sessão atual para criar o utilizador
           const { data: sessionData } = await supabase.auth.getSession();
           const sessionUser = sessionData.session?.user;
 
@@ -88,7 +47,6 @@ export const useAuth = (): UseAuthReturn => {
               updated_at: new Date().toISOString(),
             };
 
-            // Criar utilizador
             const { data: createdUser, error: createError } = await supabase
               .from("users")
               .insert([newUser])
@@ -136,197 +94,148 @@ export const useAuth = (): UseAuthReturn => {
     []
   );
 
+  // Função para atualizar estado do auth
   const updateAuthState = useCallback(
-    (newUser: User | null, newIsAdmin: boolean, skipGlobalUpdate = false) => {
-      if (!isMountedRef.current) return;
-
-      setUser(newUser);
-      setIsAdmin(newIsAdmin);
-      setError(null);
-      setLoading(false);
-
-      if (!skipGlobalUpdate) {
-        globalAuthState.user = newUser;
-        globalAuthState.isAdmin = newIsAdmin;
-        globalAuthState.lastCheck = Date.now();
-        globalAuthState.initialized = true;
-      }
-    },
-    []
-  );
-
-  const validateAndLoadUser = useCallback(
-    async (forceRefresh = false) => {
-      if (!isMountedRef.current) return;
-
-      // Evitar múltiplas inicializações
-      if (globalAuthState.isInitializing && !forceRefresh) {
-        return;
-      }
-
-      // Usar cache se válido
-      const now = Date.now();
-      if (
-        !forceRefresh &&
-        globalAuthState.initialized &&
-        globalAuthState.user &&
-        now - globalAuthState.lastCheck < CACHE_DURATION
-      ) {
-        updateAuthState(globalAuthState.user, globalAuthState.isAdmin, true);
-        return;
-      }
-
-      globalAuthState.isInitializing = true;
-
-      if (!forceRefresh) {
-        startLoadingTimeout();
-      }
+    async (session: Session | null) => {
+      if (!mounted.current) return;
 
       try {
         setError(null);
-        if (forceRefresh) setLoading(true);
 
-        // Verificar sessão com timeout
-        const sessionPromise = supabase.auth.getSession();
-        const timeoutPromise = new Promise((_, reject) =>
-          setTimeout(() => reject(new Error("Session timeout")), 3000)
-        );
-
-        const { data, error: sessionError } = (await Promise.race([
-          sessionPromise,
-          timeoutPromise,
-        ])) as any;
-
-        if (sessionError) {
-          console.error("Erro ao verificar sessão:", sessionError);
-          updateAuthState(null, false);
+        if (!session?.user) {
+          setUser(null);
+          setIsAdmin(false);
+          setLoading(false);
           return;
         }
 
-        if (!data.session?.user) {
-          updateAuthState(null, false);
-          return;
-        }
+        const userProfile = await fetchUserProfile(session.user.id);
 
-        // Procurar dados do utilizador
-        const userProfile = await fetchUserProfile(data.session.user.id);
-
-        if (userProfile) {
-          updateAuthState(userProfile.user, userProfile.isAdmin);
-        } else {
-          updateAuthState(null, false);
+        if (mounted.current) {
+          if (userProfile) {
+            setUser(userProfile.user);
+            setIsAdmin(userProfile.isAdmin);
+          } else {
+            setUser(null);
+            setIsAdmin(false);
+          }
+          setLoading(false);
         }
       } catch (error) {
-        console.error("Erro na validação de utilizador:", error);
-        if (isMountedRef.current) {
+        console.error("Erro ao atualizar estado de auth:", error);
+        if (mounted.current) {
           setError("Erro ao verificar autenticação");
-          updateAuthState(null, false);
+          setLoading(false);
         }
-      } finally {
-        globalAuthState.isInitializing = false;
-        clearTimeouts();
       }
     },
-    [updateAuthState, fetchUserProfile, startLoadingTimeout, clearTimeouts]
+    [fetchUserProfile]
   );
 
+  // Função para refresh do utilizador
   const refreshUser = useCallback(async () => {
-    if (!isMountedRef.current) return;
-    await validateAndLoadUser(true);
-  }, [validateAndLoadUser]);
+    if (!mounted.current) return;
 
+    try {
+      setLoading(true);
+      const { data } = await supabase.auth.getSession();
+      await updateAuthState(data.session);
+    } catch (error) {
+      console.error("Erro ao refresh do utilizador:", error);
+      if (mounted.current) {
+        setError("Erro ao atualizar utilizador");
+        setLoading(false);
+      }
+    }
+  }, [updateAuthState]);
+
+  // Função de logout
   const signOut = useCallback(async () => {
     try {
-      clearTimeouts();
+      // Limpar estado local primeiro
+      setUser(null);
+      setIsAdmin(false);
+      setError(null);
 
-      // Limpar estado imediatamente
-      updateAuthState(null, false);
-      globalAuthState.user = null;
-      globalAuthState.isAdmin = false;
-      globalAuthState.lastCheck = 0;
-      globalAuthState.initialized = true;
-
-      clearUserCache();
-
-      // Fazer logout no Supabase
+      // Terminar sessão no Supabase
       await supabase.auth.signOut();
 
-      // Limpar localStorage
+      // Limpar localStorage manualmente
       if (typeof window !== "undefined") {
         try {
-          localStorage.removeItem("supabase.auth.token");
-          const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-          if (supabaseUrl) {
-            const key = `sb-${
-              supabaseUrl.split("//")[1].split(".")[0]
-            }-auth-token`;
-            localStorage.removeItem(key);
-          }
+          const keys = Object.keys(localStorage);
+          keys.forEach((key) => {
+            if (key.includes("supabase") || key.includes("auth")) {
+              localStorage.removeItem(key);
+            }
+          });
         } catch (error) {
           console.error("Erro ao limpar localStorage:", error);
         }
       }
 
-      // Redirecionar
+      // Redirecionar para home
       if (typeof window !== "undefined") {
         window.location.href = "/";
       }
     } catch (error) {
       console.error("Erro no logout:", error);
+      // Forçar redirecionamento mesmo com erro
       if (typeof window !== "undefined") {
         window.location.href = "/";
       }
     }
-  }, [updateAuthState, clearTimeouts]);
+  }, []);
 
-  // Inicialização do hook
+  // Effect principal para inicialização e listener de auth
   useEffect(() => {
-    isMountedRef.current = true;
+    mounted.current = true;
 
-    // Se já foi inicializado, usar estado global
-    if (globalAuthState.initialized) {
-      updateAuthState(globalAuthState.user, globalAuthState.isAdmin, true);
-      return;
-    }
-
-    // Inicializar autenticação
-    validateAndLoadUser();
-
-    // Listener para mudanças de autenticação
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (!isMountedRef.current) return;
-
+    // Função para inicializar
+    const initialize = async () => {
       try {
-        setError(null);
-
-        if (event === "SIGNED_OUT" || !session?.user) {
-          updateAuthState(null, false);
-        } else if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
-          const userProfile = await fetchUserProfile(session.user.id);
-
-          if (userProfile && isMountedRef.current) {
-            updateAuthState(userProfile.user, userProfile.isAdmin);
-          } else if (isMountedRef.current) {
-            updateAuthState(null, false);
-          }
-        }
+        const { data } = await supabase.auth.getSession();
+        await updateAuthState(data.session);
       } catch (error) {
-        console.error("Erro ao processar mudança de autenticação:", error);
-        if (isMountedRef.current) {
-          setError("Erro ao processar autenticação");
+        console.error("Erro na inicialização:", error);
+        if (mounted.current) {
+          setError("Erro ao inicializar autenticação");
           setLoading(false);
         }
       }
-    });
+    };
 
+    // Inicializar
+    initialize();
+
+    // Listener para mudanças de auth
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(
+      async (event: AuthChangeEvent, session: Session | null) => {
+        console.log("Auth state change:", event, !!session);
+
+        if (!mounted.current) return;
+
+        // Para eventos de logout, limpar estado imediatamente
+        if (event === "SIGNED_OUT") {
+          setUser(null);
+          setIsAdmin(false);
+          setLoading(false);
+          return;
+        }
+
+        // Para outros eventos, atualizar estado
+        await updateAuthState(session);
+      }
+    );
+
+    // Cleanup
     return () => {
-      isMountedRef.current = false;
-      clearTimeouts();
+      mounted.current = false;
       subscription.unsubscribe();
     };
-  }, [validateAndLoadUser, updateAuthState, fetchUserProfile, clearTimeouts]);
+  }, [updateAuthState]);
 
   return {
     user,

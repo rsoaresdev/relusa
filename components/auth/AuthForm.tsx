@@ -23,7 +23,6 @@ interface AuthFormProps {
 // Função para traduzir mensagens de erro do Supabase
 const traduzirErro = (mensagem: string): string => {
   const errosTraducoes: Record<string, string> = {
-    // Erros de autenticação
     "Invalid login credentials": "Credenciais de login inválidas.",
     "Email not confirmed":
       "Email não confirmado. Por favor, verifique sua caixa de entrada.",
@@ -40,12 +39,8 @@ const traduzirErro = (mensagem: string): string => {
     "User not found": "Utilizador não encontrado.",
     "Unable to validate email address":
       "Não foi possível validar o endereço de email.",
-
-    // Erros de reset de password
     "For security purposes, you can only request this once every 60 seconds":
       "Por motivos de segurança, só pode solicitar isto uma vez a cada 60 segundos.",
-
-    // Outros erros comuns
     "Database error": "Erro de base de dados. Tente novamente mais tarde.",
     "Server error": "Erro de servidor. Tente novamente mais tarde.",
     "Service unavailable": "Serviço indisponível. Tente novamente mais tarde.",
@@ -58,7 +53,6 @@ const traduzirErro = (mensagem: string): string => {
     }
   }
 
-  // Se não encontrarmos uma tradução específica, retornar mensagem genérica
   return "Ocorreu um erro. Por favor, tente novamente.";
 };
 
@@ -76,7 +70,7 @@ export default function AuthForm({ view, toggleView }: AuthFormProps) {
   // Hook de email
   const emailService = useEmailService();
 
-  // Verificar força da password
+  // Verificar segurança da password
   useEffect(() => {
     if (!formData.password) {
       setPasswordStrength(0);
@@ -145,12 +139,9 @@ export default function AuthForm({ view, toggleView }: AuthFormProps) {
       }
 
       toast.success("Login efetuado com sucesso!");
-
-      // O onAuthStateChange do Supabase irá processar automaticamente a mudança
+      // O estado será atualizado automaticamente pelo listener
     } catch (error: any) {
-      toast.error(
-        traduzirErro(error.message) || "Erro ao fazer login. Tente novamente."
-      );
+      toast.error(traduzirErro(error.message));
     } finally {
       setLoading(false);
     }
@@ -159,26 +150,19 @@ export default function AuthForm({ view, toggleView }: AuthFormProps) {
   const handleGoogleLogin = async () => {
     setLoading(true);
     try {
-      // Usar implicit flow direto para a página de marcações
-      const redirectUrl = new URL("/marcacoes", window.location.origin).toString();
-      
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: redirectUrl,
+          redirectTo: `${window.location.origin}/marcacoes`,
         },
       });
 
       if (error) {
         throw error;
       }
-
-      // O redirecionamento será tratado automaticamente pelo Supabase
+      // O redirecionamento será tratado automaticamente
     } catch (error: any) {
-      toast.error(
-        traduzirErro(error.message) ||
-          "Erro ao fazer login com Google. Tente novamente."
-      );
+      toast.error(traduzirErro(error.message));
       setLoading(false);
     }
   };
@@ -194,8 +178,7 @@ export default function AuthForm({ view, toggleView }: AuthFormProps) {
     }
 
     try {
-      // Registar o utilizador no Auth
-      const { data: authData, error: authError } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
         options: {
@@ -206,350 +189,242 @@ export default function AuthForm({ view, toggleView }: AuthFormProps) {
         },
       });
 
-      if (authError) {
-        throw authError;
+      if (error) {
+        throw error;
       }
 
-      // Criar o perfil do utilizador usando a função RPC create_user
-      if (authData.user) {
-        const { error: profileError } = await supabase.rpc(
-          "create_user",
-          {
-            user_email: formData.email,
-            user_name: formData.name,
-            user_phone: formData.phone,
-            user_id: authData.user.id,
-          }
+      if (data.user && !data.session) {
+        toast.success(
+          "Conta criada! Verifique o seu email para confirmar a conta."
         );
+        toggleView(); // Mudar para login
+      } else {
+        toast.success("Conta criada e login efetuado com sucesso!");
+      }
+    } catch (error: any) {
+      toast.error(traduzirErro(error.message));
+    } finally {
+      setLoading(false);
+    }
+  };
 
-        if (profileError) {
-          throw profileError;
+  const handleForgotPassword = async () => {
+    if (!formData.email) {
+      toast.error("Por favor, insira o seu email primeiro.");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(
+        formData.email,
+        {
+          redirectTo: `${window.location.origin}/auth/reset-password`,
         }
+      );
 
-        // Procurar os dados do utilizador para enviar o email
-        const { data: userDetails } = await supabase
-          .from("users")
-          .select("*")
-          .eq("id", authData.user.id)
-          .single();
-
-        // Enviar email de boas-vindas
-        if (userDetails) {
-          await emailService.sendWelcomeEmail(userDetails);
-        }
-
-        // Criar registo de pontos de fidelidade
-        await supabase
-          .from("loyalty_points")
-          .insert([
-            {
-              user_id: authData.user.id,
-              points: 0,
-              bookings_count: 0,
-            },
-          ]);
+      if (error) {
+        throw error;
       }
 
       toast.success(
-        "Conta criada com sucesso! Verifique o seu email para confirmar o registo."
+        "Email de recuperação enviado! Verifique a sua caixa de entrada."
       );
     } catch (error: any) {
-      toast.error(
-        traduzirErro(error.message) || "Erro ao criar conta. Tente novamente."
-      );
+      toast.error(traduzirErro(error.message));
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div>
-      <h3 className="text-xl font-bold text-center mb-6 text-gray-900 dark:text-white">
-        {view === "login" ? "Entrar na sua conta" : "Criar uma nova conta"}
-      </h3>
+    <div className="w-full max-w-md mx-auto">
+      <div className="bg-card rounded-lg border border-border/50 shadow-sm p-6">
+        <div className="text-center mb-6">
+          <h2 className="text-2xl font-bold">
+            {view === "login" ? "Entrar" : "Criar Conta"}
+          </h2>
+          <p className="text-sm text-muted-foreground mt-2">
+            {view === "login"
+              ? "Entre na sua conta para agendar lavagens"
+              : "Crie uma conta para começar a agendar"}
+          </p>
+        </div>
 
-      <form
-        onSubmit={view === "login" ? handleLogin : handleRegister}
-        className="space-y-4"
-      >
-        {view === "register" && (
-          <div>
-            <label
-              htmlFor="name"
-              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-            >
-              Nome Completo
-            </label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                <User size={18} className="text-gray-400" />
+        <form
+          onSubmit={view === "login" ? handleLogin : handleRegister}
+          className="space-y-4"
+        >
+          {view === "register" && (
+            <>
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  Nome Completo
+                </label>
+                <div className="relative">
+                  <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                  <input
+                    type="text"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleChange}
+                    required
+                    className="w-full pl-10 pr-4 py-2 border border-border rounded-md focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                    placeholder="O seu nome completo"
+                  />
+                </div>
               </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  Telefone (opcional)
+                </label>
+                <div className="relative">
+                  <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                  <input
+                    type="tel"
+                    name="phone"
+                    value={formData.phone}
+                    onChange={handleChange}
+                    className="w-full pl-10 pr-4 py-2 border border-border rounded-md focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                    placeholder="+351 xxx xxx xxx"
+                  />
+                </div>
+              </div>
+            </>
+          )}
+
+          <div>
+            <label className="block text-sm font-medium mb-2">Email</label>
+            <div className="relative">
+              <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
               <input
-                type="text"
-                id="name"
-                name="name"
-                value={formData.name}
+                type="email"
+                name="email"
+                value={formData.email}
                 onChange={handleChange}
                 required
-                maxLength={CHAR_LIMITS.name}
-                className="w-full pl-10 px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-md focus:ring-2 focus:ring-primary focus:border-primary dark:bg-gray-800 dark:text-white"
-                placeholder="O seu nome completo"
+                className="w-full pl-10 pr-4 py-2 border border-border rounded-md focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                placeholder="exemplo@email.com"
               />
             </div>
           </div>
-        )}
 
-        <div>
-          <label
-            htmlFor="email"
-            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-          >
-            Email
-          </label>
-          <div className="relative">
-            <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-              <Mail size={18} className="text-gray-400" />
-            </div>
-            <input
-              type="email"
-              id="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              required
-              maxLength={CHAR_LIMITS.email}
-              className="w-full pl-10 px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-md focus:ring-2 focus:ring-primary focus:border-primary dark:bg-gray-800 dark:text-white"
-              placeholder="o.seu.email@exemplo.com"
-            />
-          </div>
-        </div>
-
-        <div>
-          <label
-            htmlFor="password"
-            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-          >
-            Password
-          </label>
-          <div className="relative">
-            <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-              <Lock size={18} className="text-gray-400" />
-            </div>
-            <input
-              type={showPassword ? "text" : "password"}
-              id="password"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              required
-              minLength={6}
-              maxLength={CHAR_LIMITS.password}
-              className="w-full pl-10 pr-10 px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-md focus:ring-2 focus:ring-primary focus:border-primary dark:bg-gray-800 dark:text-white"
-              placeholder="******"
-            />
-            <div className="absolute inset-y-0 right-0 flex items-center pr-3">
+          <div>
+            <label className="block text-sm font-medium mb-2">Password</label>
+            <div className="relative">
+              <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+              <input
+                type={showPassword ? "text" : "password"}
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                required
+                className="w-full pl-10 pr-12 py-2 border border-border rounded-md focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                placeholder="A sua password"
+              />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="text-gray-400 hover:text-gray-500 focus:outline-none"
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
               >
-                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                {showPassword ? (
+                  <EyeOff className="w-4 h-4" />
+                ) : (
+                  <Eye className="w-4 h-4" />
+                )}
               </button>
             </div>
-          </div>
 
-          {view === "register" && formData.password && (
-            <div className="mt-2 space-y-1">
-              <div className="flex justify-between items-center">
-                <div className="h-1 flex-1 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                  <div
-                    className={`h-full ${getStrengthColor()} transition-all duration-300`}
-                    style={{ width: `${passwordStrength * 25}%` }}
-                  ></div>
+            {view === "register" && formData.password && (
+              <div className="mt-2">
+                <div className="flex justify-between text-xs text-muted-foreground mb-1">
+                  <span>Segurança da password:</span>
+                  <span>{getStrengthText()}</span>
                 </div>
-                <span className="text-xs ml-2 font-medium text-gray-500 dark:text-gray-400 min-w-[40px] text-right">
-                  {getStrengthText()}
-                </span>
+                <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1">
+                  <div
+                    className={`h-1 rounded-full transition-all duration-300 ${getStrengthColor()}`}
+                    style={{ width: `${(passwordStrength / 4) * 100}%` }}
+                  />
+                </div>
               </div>
-              <ul className="text-xs text-gray-500 dark:text-gray-400 space-y-1 pl-1">
-                <li
-                  className={
-                    formData.password.length >= 8
-                      ? "text-green-500 dark:text-green-400"
-                      : ""
-                  }
-                >
-                  • Mínimo de 8 caracteres
-                </li>
-                <li
-                  className={
-                    /[A-Z]/.test(formData.password)
-                      ? "text-green-500 dark:text-green-400"
-                      : ""
-                  }
-                >
-                  • Pelo menos uma letra maiúscula
-                </li>
-                <li
-                  className={
-                    /[0-9]/.test(formData.password)
-                      ? "text-green-500 dark:text-green-400"
-                      : ""
-                  }
-                >
-                  • Pelo menos um número
-                </li>
-                <li
-                  className={
-                    /[^A-Za-z0-9]/.test(formData.password)
-                      ? "text-green-500 dark:text-green-400"
-                      : ""
-                  }
-                >
-                  • Pelo menos um caracter especial
-                </li>
-              </ul>
-            </div>
-          )}
-        </div>
+            )}
+          </div>
 
-        {view === "register" && (
-          <div>
-            <label
-              htmlFor="phone"
-              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-            >
-              Telemóvel (opcional)
-            </label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                <Phone size={18} className="text-gray-400" />
-              </div>
-              <input
-                type="tel"
-                id="phone"
-                name="phone"
-                value={formData.phone}
-                onChange={handleChange}
-                maxLength={CHAR_LIMITS.phone}
-                className="w-full pl-10 px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-md focus:ring-2 focus:ring-primary focus:border-primary dark:bg-gray-800 dark:text-white"
-                placeholder="+351 912345678"
-              />
+          <Button type="submit" className="w-full" disabled={loading}>
+            {loading
+              ? "A processar..."
+              : view === "login"
+              ? "Entrar"
+              : "Criar Conta"}
+          </Button>
+        </form>
+
+        <div className="mt-4">
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-border" />
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-2 bg-card text-muted-foreground">ou</span>
             </div>
           </div>
-        )}
 
-        <Button type="submit" className="w-full" disabled={loading}>
-          {loading ? (
-            <>
-              <span className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white mr-2"></span>
-              {view === "login" ? "A entrar..." : "A registar..."}
-            </>
-          ) : (
-            <>{view === "login" ? "Entrar" : "Registar"}</>
-          )}
-        </Button>
-      </form>
-
-      {/* Separador */}
-      <div className="my-6 flex items-center">
-        <div className="flex-grow border-t border-gray-300 dark:border-gray-700"></div>
-        <span className="mx-4 text-sm text-gray-500 dark:text-gray-400">
-          ou
-        </span>
-        <div className="flex-grow border-t border-gray-300 dark:border-gray-700"></div>
-      </div>
-
-      {/* Botão de login com Google */}
-      <Button
-        type="button"
-        variant="outline"
-        className="w-full flex items-center justify-center gap-2"
-        onClick={handleGoogleLogin}
-        disabled={loading}
-      >
-        <svg
-          width="18"
-          height="18"
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 48 48"
-        >
-          <path
-            fill="#FFC107"
-            d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24c0,11.045,8.955,20,20,20c11.045,0,20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z"
-          />
-          <path
-            fill="#FF3D00"
-            d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z"
-          />
-          <path
-            fill="#4CAF50"
-            d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z"
-          />
-          <path
-            fill="#1976D2"
-            d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.238C36.971,39.205,44,34,44,24C44,22.659,43.862,21.35,43.611,20.083z"
-          />
-        </svg>
-        Continuar com Google
-      </Button>
-
-      <div className="mt-6 text-center">
-        <p className="text-sm text-gray-600 dark:text-gray-400">
-          {view === "login" ? "Não tem uma conta?" : "Já tem uma conta?"}
-          <button
+          <Button
             type="button"
-            onClick={toggleView}
-            className="ml-1 text-primary hover:underline focus:outline-none"
+            variant="outline"
+            className="w-full mt-4"
+            onClick={handleGoogleLogin}
+            disabled={loading}
           >
-            {view === "login" ? "Registar" : "Entrar"}
-          </button>
-        </p>
-      </div>
-
-      {view === "login" && (
-        <div className="mt-4 text-center">
-          <button
-            type="button"
-            className="text-sm text-primary hover:underline focus:outline-none"
-            onClick={async () => {
-              if (!formData.email) {
-                toast.error(
-                  "Por favor, insira o seu email para redefinir a password."
-                );
-                return;
-              }
-
-              setLoading(true);
-              try {
-                const { error } = await supabase.auth.resetPasswordForEmail(
-                  formData.email,
-                  {
-                    redirectTo: `${window.location.origin}/auth/callback?type=recovery`,
-                  }
-                );
-
-                if (error) {
-                  throw error;
-                }
-
-                toast.success(
-                  "Email de redefinição de password enviado. Verifique a sua caixa de entrada."
-                );
-              } catch (error: any) {
-                toast.error(
-                  traduzirErro(error.message) ||
-                    "Erro ao enviar email de redefinição. Tente novamente."
-                );
-              } finally {
-                setLoading(false);
-              }
-            }}
-          >
-            Esqueceu a password?
-          </button>
+            <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24">
+              <path
+                fill="currentColor"
+                d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+              />
+              <path
+                fill="currentColor"
+                d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+              />
+              <path
+                fill="currentColor"
+                d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+              />
+              <path
+                fill="currentColor"
+                d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+              />
+            </svg>
+            {loading ? "A conectar..." : "Continuar com Google"}
+          </Button>
         </div>
-      )}
+
+        <div className="mt-6 text-center space-y-2">
+          {view === "login" && (
+            <button
+              type="button"
+              onClick={handleForgotPassword}
+              disabled={loading}
+              className="text-sm text-primary hover:underline disabled:opacity-50"
+            >
+              Esqueceu-se da password?
+            </button>
+          )}
+
+          <p className="text-sm text-muted-foreground">
+            {view === "login" ? "Não tem conta?" : "Já tem conta?"}{" "}
+            <button
+              type="button"
+              onClick={toggleView}
+              disabled={loading}
+              className="text-primary hover:underline disabled:opacity-50"
+            >
+              {view === "login" ? "Criar conta" : "Entrar"}
+            </button>
+          </p>
+        </div>
+      </div>
     </div>
   );
 }

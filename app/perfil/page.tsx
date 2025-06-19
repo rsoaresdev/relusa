@@ -23,21 +23,15 @@ import {
   FileText,
   Clock,
 } from "lucide-react";
-import {
-  supabase,
-  getCurrentUser,
-  User as UserType,
-  getUserBookings,
-  Booking,
-  performLogout,
-} from "@/lib/supabase/config";
-import SimpleProtectedRoute from "@/components/auth/SimpleProtectedRoute";
+import { supabase, getUserBookings, Booking } from "@/lib/supabase/config";
+import ProtectedRoute from "@/components/auth/ProtectedRoute";
+import { useAuthContext } from "@/components/auth/AuthProvider";
 import { format, parseISO } from "date-fns";
 import { pt } from "date-fns/locale";
 
 export default function ProfilePage() {
   const router = useRouter();
-  const [user, setUser] = useState<UserType | null>(null);
+  const { user, loading: authLoading, signOut, refreshUser } = useAuthContext();
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
@@ -48,32 +42,30 @@ export default function ProfilePage() {
   });
 
   useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        const userData = await getCurrentUser();
-        if (!userData) {
-          router.push("/marcacoes");
-          return;
+    if (user && !authLoading) {
+      setFormData({
+        name: user.name || "",
+        phone: user.phone || "",
+      });
+
+      // Carregar marcações do utilizador
+      const loadBookings = async () => {
+        try {
+          const userBookings = await getUserBookings(user.id);
+          setBookings(userBookings);
+        } catch (error) {
+          console.error("Erro ao carregar marcações:", error);
+          toast.error("Erro ao carregar marcações.");
+        } finally {
+          setLoading(false);
         }
+      };
 
-        setUser(userData);
-        setFormData({
-          name: userData.name || "",
-          phone: userData.phone || "",
-        });
-
-        // Procurar marcações do utilizador
-        const userBookings = await getUserBookings(userData.id);
-        setBookings(userBookings);
-      } catch {
-        toast.error("Erro ao carregar perfil. Tente novamente.");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchUserData();
-  }, [router]);
+      loadBookings();
+    } else if (!authLoading && !user) {
+      router.push("/marcacoes");
+    }
+  }, [user, authLoading, router]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -103,12 +95,8 @@ export default function ProfilePage() {
 
       toast.success("Perfil atualizado com sucesso!");
 
-      // Atualizar o estado do utilizador
-      setUser({
-        ...user,
-        name: formData.name,
-        phone: formData.phone,
-      });
+      // Refresh user data
+      await refreshUser();
     } catch (error: any) {
       toast.error(
         error.message || "Erro ao atualizar perfil. Tente novamente."
@@ -140,10 +128,9 @@ export default function ProfilePage() {
       if (userError) throw userError;
 
       // Depois terminar sessão
-      await performLogout();
+      await signOut();
 
       toast.success("Conta apagada com sucesso.");
-      router.push("/");
     } catch (error: any) {
       toast.error(error.message || "Erro ao apagar conta. Tente novamente.");
       setDeleting(false);
@@ -202,279 +189,222 @@ export default function ProfilePage() {
     }
   };
 
-  // Filtrar marcações por categoria
-  const allBookings = bookings;
-  const pendingBookings = bookings.filter(
-    (b) => b.status === "pending" || b.status === "approved"
-  );
-  const completedBookings = bookings.filter((b) => b.status === "completed");
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-background pt-24 pb-16">
-        <div className="container mx-auto px-6">
-          <div className="flex justify-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-2 border-primary border-t-transparent"></div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <SimpleProtectedRoute>
-      <div className="min-h-screen bg-background pt-24 pb-16">
-        <div className="container mx-auto px-6 max-w-6xl">
-          {/* Header */}
-          <div className="mb-8">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center">
-                <User className="text-primary" size={24} />
-              </div>
-              <div>
-                <h1 className="text-3xl font-bold text-foreground">
-                  Meu Perfil
-                </h1>
-                <p className="text-muted-foreground">
-                  Gerencie as suas informações pessoais e marcações
-                </p>
-              </div>
+    <ProtectedRoute>
+      <div className="pt-24 pb-16 min-h-screen">
+        <div className="container mx-auto px-6">
+          <div className="max-w-6xl mx-auto">
+            {/* Header */}
+            <div className="mb-8">
+              <h1 className="text-3xl font-bold mb-2">Meu Perfil</h1>
+              <p className="text-muted-foreground">
+                Gerir as suas informações pessoais e marcações.
+              </p>
             </div>
-          </div>
 
-          {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-            <Card className="shadow-sm">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-muted-foreground">
-                      Total de Marcações
-                    </p>
-                    <p className="text-2xl font-bold">{allBookings.length}</p>
-                  </div>
-                  <Calendar className="text-muted-foreground" size={20} />
+            {loading && authLoading ? (
+              <div className="flex justify-center items-center py-12">
+                <div className="text-center">
+                  <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary mx-auto mb-4"></div>
+                  <p className="text-sm text-muted-foreground">
+                    A carregar dados do perfil...
+                  </p>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            ) : (
+              <Tabs defaultValue="profile" className="space-y-6">
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger
+                    value="profile"
+                    className="flex items-center gap-2"
+                  >
+                    <User className="w-4 h-4" />
+                    Perfil
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="bookings"
+                    className="flex items-center gap-2"
+                  >
+                    <Calendar className="w-4 h-4" />
+                    Marcações
+                  </TabsTrigger>
+                </TabsList>
 
-            <Card className="shadow-sm">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-muted-foreground">Pendentes</p>
-                    <p className="text-2xl font-bold">
-                      {pendingBookings.length}
-                    </p>
-                  </div>
-                  <Clock className="text-blue-500" size={20} />
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="shadow-sm">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-muted-foreground">Concluídas</p>
-                    <p className="text-2xl font-bold">
-                      {completedBookings.length}
-                    </p>
-                  </div>
-                  <FileText className="text-green-500" size={20} />
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Tabs */}
-          <Tabs defaultValue="info" className="space-y-6">
-            <TabsList className="grid grid-cols-3 w-full">
-              <TabsTrigger value="info">Informações Pessoais</TabsTrigger>
-              <TabsTrigger value="bookings">
-                Minhas Marcações ({allBookings.length})
-              </TabsTrigger>
-              <TabsTrigger value="danger">Zona de Perigo</TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="info">
-              <Card className="shadow-sm">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Edit3 size={20} />
-                    Informações Pessoais
-                  </CardTitle>
-                  <CardDescription>
-                    Atualize as suas informações pessoais aqui.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <form onSubmit={handleSubmit} className="space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div className="space-y-2">
-                        <Label htmlFor="name">Nome Completo</Label>
-                        <Input
-                          id="name"
-                          name="name"
-                          type="text"
-                          value={formData.name}
-                          onChange={handleChange}
-                          required
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="phone">Número de Telemóvel</Label>
-                        <Input
-                          id="phone"
-                          name="phone"
-                          type="tel"
-                          value={formData.phone}
-                          onChange={handleChange}
-                          required
-                        />
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="email">Email (apenas leitura)</Label>
-                      <Input
-                        id="email"
-                        type="email"
-                        value={user?.email || ""}
-                        disabled
-                        className="bg-muted/50"
-                      />
-                    </div>
-
-                    <Button
-                      type="submit"
-                      disabled={updating}
-                      className="w-full md:w-auto"
-                    >
-                      {updating ? "A atualizar..." : "Atualizar Perfil"}
-                    </Button>
-                  </form>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="bookings">
-              <Card className="shadow-sm">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Calendar size={20} />
-                    Minhas Marcações
-                  </CardTitle>
-                  <CardDescription>
-                    Histórico das suas marcações e respetivos estados.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {bookings.length === 0 ? (
-                    <div className="text-center py-12">
-                      <Calendar
-                        size={48}
-                        className="mx-auto text-muted-foreground mb-4"
-                      />
-                      <h3 className="text-lg font-semibold text-foreground mb-2">
-                        Ainda não tem marcações
-                      </h3>
-                      <p className="text-muted-foreground mb-6">
-                        Faça a sua primeira marcação para aparecer aqui.
-                      </p>
-                      <Button asChild>
-                        <a href="/marcacoes">Fazer Marcação</a>
-                      </Button>
-                    </div>
-                  ) : (
-                    <div className="space-y-4">
-                      {bookings.map((booking) => (
-                        <div
-                          key={booking.id}
-                          className="border border-border/50 rounded-lg p-6 hover:shadow-sm transition-shadow"
-                        >
-                          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                {/* Tab Perfil */}
+                <TabsContent value="profile">
+                  <div className="grid gap-6">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                          <Edit3 className="w-5 h-5" />
+                          Informações Pessoais
+                        </CardTitle>
+                        <CardDescription>
+                          Atualize as suas informações pessoais aqui.
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <form onSubmit={handleSubmit} className="space-y-4">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="space-y-2">
-                              <div className="flex items-center gap-3">
-                                <h3 className="font-semibold text-foreground">
-                                  {booking.service_type === "complete"
-                                    ? "Pack Completo"
-                                    : "Lavagem Exterior"}
-                                </h3>
-                                {getBookingStatusBadge(booking.status)}
-                              </div>
-                              <div className="text-sm text-muted-foreground space-y-1">
-                                <div className="flex items-center gap-2">
-                                  <Calendar size={14} />
-                                  <span>{formatDate(booking.date)}</span>
-                                </div>
-                              </div>
+                              <Label htmlFor="name">Nome Completo</Label>
+                              <Input
+                                id="name"
+                                name="name"
+                                type="text"
+                                value={formData.name}
+                                onChange={handleChange}
+                                placeholder="O seu nome completo"
+                                required
+                              />
                             </div>
-                            <div className="text-right">
-                              <div className="text-lg font-bold text-primary">
-                                {booking.service_type === "complete"
-                                  ? "18€"
-                                  : "12€"}
-                              </div>
-                              {booking.status === "completed" && (
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  asChild
-                                  className="mt-2"
-                                >
-                                  <a href="/perfil/faturas">
-                                    <Receipt size={14} className="mr-2" />
-                                    Ver Fatura
-                                  </a>
-                                </Button>
-                              )}
+                            <div className="space-y-2">
+                              <Label htmlFor="phone">Telefone</Label>
+                              <Input
+                                id="phone"
+                                name="phone"
+                                type="tel"
+                                value={formData.phone}
+                                onChange={handleChange}
+                                placeholder="+351 xxx xxx xxx"
+                              />
                             </div>
                           </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </TabsContent>
+                          <div className="space-y-2">
+                            <Label htmlFor="email">Email</Label>
+                            <Input
+                              id="email"
+                              type="email"
+                              value={user?.email || ""}
+                              disabled
+                              className="bg-muted"
+                            />
+                            <p className="text-xs text-muted-foreground">
+                              O email não pode ser alterado.
+                            </p>
+                          </div>
+                          <Button type="submit" disabled={updating}>
+                            {updating ? "A atualizar..." : "Atualizar Perfil"}
+                          </Button>
+                        </form>
+                      </CardContent>
+                    </Card>
 
-            <TabsContent value="danger">
-              <Card className="shadow-sm border-destructive/20">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-destructive">
-                    <Trash2 size={20} />
-                    Zona de Perigo
-                  </CardTitle>
-                  <CardDescription>
-                    Ações irreversíveis na sua conta.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-6">
-                    <div className="p-6 border border-destructive/20 rounded-lg bg-destructive/5">
-                      <h3 className="font-semibold text-destructive mb-2">
-                        Apagar Conta
-                      </h3>
-                      <p className="text-sm text-muted-foreground mb-4">
-                        Esta ação apagará permanentemente a sua conta e todos os
-                        dados associados. Esta ação não pode ser desfeita.
-                      </p>
-                      <Button
-                        variant="destructive"
-                        onClick={handleDeleteAccount}
-                        disabled={deleting}
-                      >
-                        {deleting ? "A apagar..." : "Apagar Conta"}
-                      </Button>
-                    </div>
+                    {/* Zona de perigo */}
+                    <Card className="border-destructive/50">
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2 text-destructive">
+                          <Trash2 className="w-5 h-5" />
+                          Zona de Perigo
+                        </CardTitle>
+                        <CardDescription>
+                          Ações irreversíveis relacionadas com a sua conta.
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <Button
+                          variant="destructive"
+                          onClick={handleDeleteAccount}
+                          disabled={deleting}
+                        >
+                          {deleting ? "A apagar..." : "Apagar Conta"}
+                        </Button>
+                      </CardContent>
+                    </Card>
                   </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
+                </TabsContent>
+
+                {/* Tab Marcações */}
+                <TabsContent value="bookings">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Calendar className="w-5 h-5" />
+                        Histórico de Marcações
+                      </CardTitle>
+                      <CardDescription>
+                        Veja todas as suas marcações passadas e atuais.
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      {loading ? (
+                        <div className="flex justify-center py-8">
+                          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
+                        </div>
+                      ) : bookings.length === 0 ? (
+                        <div className="text-center py-8">
+                          <Calendar className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                          <h3 className="text-lg font-semibold mb-2">
+                            Nenhuma marcação encontrada
+                          </h3>
+                          <p className="text-muted-foreground mb-4">
+                            Ainda não fez nenhuma marcação.
+                          </p>
+                          <Button
+                            onClick={() => router.push("/marcacoes")}
+                            variant="outline"
+                          >
+                            Fazer Primeira Marcação
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="space-y-4">
+                          {bookings.map((booking) => (
+                            <div
+                              key={booking.id}
+                              className="border border-border rounded-lg p-4"
+                            >
+                              <div className="flex justify-between items-start mb-3">
+                                <div>
+                                  <h4 className="font-semibold">
+                                    {booking.service_type === "exterior"
+                                      ? "Lavagem Exterior"
+                                      : "Lavagem Completa"}
+                                  </h4>
+                                  <p className="text-sm text-muted-foreground">
+                                    {formatDate(booking.date)}
+                                  </p>
+                                </div>
+                                {getBookingStatusBadge(booking.status)}
+                              </div>
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                                <div>
+                                  <p className="flex items-center gap-2">
+                                    <Clock className="w-4 h-4" />
+                                    {booking.time_slot === "custom"
+                                      ? booking.custom_time
+                                      : booking.time_slot === "morning"
+                                      ? "Manhã (9h-12h)"
+                                      : booking.time_slot === "afternoon"
+                                      ? "Tarde (12h-17h)"
+                                      : "Noite (17h-20h)"}
+                                  </p>
+                                </div>
+                                <div>
+                                  <p className="text-muted-foreground">
+                                    {booking.car_model} - {booking.car_plate}
+                                  </p>
+                                </div>
+                              </div>
+                              {booking.notes && (
+                                <div className="mt-3 pt-3 border-t border-border">
+                                  <p className="text-sm text-muted-foreground">
+                                    <strong>Notas:</strong> {booking.notes}
+                                  </p>
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+              </Tabs>
+            )}
+          </div>
         </div>
       </div>
-    </SimpleProtectedRoute>
+    </ProtectedRoute>
   );
 }

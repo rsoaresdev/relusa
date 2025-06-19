@@ -34,9 +34,9 @@ export default function BookingAuthWrapper() {
 
   // Atualizar view baseado no estado do usuário
   useEffect(() => {
-    if (user) {
+    if (user && !loading) {
       setView("dashboard");
-    } else if (!loading) {
+    } else if (!user && !loading) {
       setView("login");
     }
   }, [user, loading]);
@@ -51,9 +51,10 @@ export default function BookingAuthWrapper() {
   const handleLogout = async () => {
     try {
       await signOut();
+      setView("login");
     } catch (error) {
-      console.error("Erro ao fazer logout:", error);
-      toast.error("Erro ao fazer logout. A recarregar página...");
+      console.error("Erro ao terminar sessão:", error);
+      toast.error("Erro ao terminar sessão. A recarregar página...");
       setTimeout(() => {
         window.location.href = "/";
       }, 1000);
@@ -67,7 +68,7 @@ export default function BookingAuthWrapper() {
   const goToBookingForm = () => setView("booking");
   const goToDashboard = () => setView("dashboard");
 
-  // Loading state com timeout visual
+  // Loading state
   if (loading) {
     return (
       <div className="flex justify-center items-center py-12">
@@ -84,9 +85,7 @@ export default function BookingAuthWrapper() {
   // Not authenticated
   if (!user) {
     return (
-      <div className="max-w-md mx-auto">
-        <AuthForm view={view as "login" | "register"} toggleView={toggleView} />
-      </div>
+      <AuthForm view={view as "login" | "register"} toggleView={toggleView} />
     );
   }
 
