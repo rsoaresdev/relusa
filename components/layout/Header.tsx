@@ -4,7 +4,16 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
-import { Menu, X, Calendar, User } from "lucide-react";
+import {
+  Menu,
+  X,
+  Calendar,
+  User,
+  Star,
+  FileText,
+  LayoutDashboard,
+  LogOut,
+} from "lucide-react";
 import { useAuthContext } from "@/components/auth/AuthProvider";
 import ProfileDropdown from "./ProfileDropdown";
 
@@ -19,7 +28,7 @@ const navigation = [
 export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const { user, loading } = useAuthContext();
+  const { user, loading, isAdmin, signOut } = useAuthContext();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -148,20 +157,72 @@ export default function Header() {
                         Nova Marcação
                       </Link>
                     </Button>
-                    <Button
-                      variant="outline"
-                      size="lg"
-                      className="w-full gap-2"
-                      asChild
-                    >
-                      <Link
-                        href="/perfil"
-                        onClick={() => setMobileMenuOpen(false)}
-                      >
-                        <User size={18} />
-                        Meu Perfil
-                      </Link>
-                    </Button>
+
+                    {/* Separador para as opções do perfil */}
+                    <div className="border-t border-border/50 pt-3 mt-4">
+                      <p className="text-sm font-medium text-muted-foreground mb-2 px-4">
+                        Olá, {user.name?.split(" ")[0] || "Cliente"}
+                      </p>
+
+                      <div className="space-y-1">
+                        <Link
+                          href="/perfil"
+                          className="flex items-center gap-2 px-4 py-3 text-base font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-lg transition-colors"
+                          onClick={() => setMobileMenuOpen(false)}
+                        >
+                          <User size={18} />O Meu Perfil
+                        </Link>
+
+                        <Link
+                          href="/perfil/marcacoes"
+                          className="flex items-center gap-2 px-4 py-3 text-base font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-lg transition-colors"
+                          onClick={() => setMobileMenuOpen(false)}
+                        >
+                          <Calendar size={18} />
+                          As Minhas Marcações
+                        </Link>
+
+                        <Link
+                          href="/perfil/avaliacoes"
+                          className="flex items-center gap-2 px-4 py-3 text-base font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-lg transition-colors"
+                          onClick={() => setMobileMenuOpen(false)}
+                        >
+                          <Star size={18} />
+                          As Minhas Avaliações
+                        </Link>
+
+                        <Link
+                          href="/perfil/faturas"
+                          className="flex items-center gap-2 px-4 py-3 text-base font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-lg transition-colors"
+                          onClick={() => setMobileMenuOpen(false)}
+                        >
+                          <FileText size={18} />
+                          As Minhas Faturas
+                        </Link>
+
+                        {isAdmin && (
+                          <Link
+                            href="/admin"
+                            className="flex items-center gap-2 px-4 py-3 text-base font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-lg transition-colors"
+                            onClick={() => setMobileMenuOpen(false)}
+                          >
+                            <LayoutDashboard size={18} />
+                            Administração
+                          </Link>
+                        )}
+
+                        <button
+                          onClick={() => {
+                            signOut();
+                            setMobileMenuOpen(false);
+                          }}
+                          className="flex items-center gap-2 px-4 py-3 text-base font-medium text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/50 rounded-lg transition-colors w-full text-left"
+                        >
+                          <LogOut size={18} />
+                          Terminar sessão
+                        </button>
+                      </div>
+                    </div>
                   </>
                 ) : (
                   <Button

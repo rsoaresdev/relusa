@@ -352,7 +352,7 @@ export default function AdminDashboard({
           await emailService.sendServiceStartedEmail(updatedBooking);
           break;
         case "completed":
-          await emailService.sendServiceCompletedEmail(updatedBooking);
+          // await emailService.sendServiceCompletedEmail(updatedBooking);
           // Enviar também o email solicitando avaliação
           await emailService.sendServiceCompletedWithReviewRequestEmail(
             updatedBooking
