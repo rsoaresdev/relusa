@@ -1,6 +1,5 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase/config";
 import { toast } from "sonner";
@@ -15,10 +14,11 @@ import {
   User as UserIcon,
 } from "lucide-react";
 import { parseISO, addHours, isBefore } from "date-fns";
-import { Booking, LoyaltyPoints, User } from "@/lib/supabase/config";
+import { Booking } from "@/lib/supabase/config";
 import BookingCard from "./BookingCard";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { useUserData } from "@/lib/hooks/useUserData";
 
 interface UserDashboardProps {
   session: any;
@@ -31,60 +31,15 @@ export default function UserDashboard({
   onLogout,
   onNewBooking,
 }: UserDashboardProps) {
-  const [loading, setLoading] = useState(true);
-  const [bookings, setBookings] = useState<Booking[]>([]);
-  const [user, setUser] = useState<User | null>(null);
-  const [loyalty, setLoyalty] = useState<LoyaltyPoints | null>(null);
+  // Usar o hook otimizado para carregar dados do usuário
+  const { user, bookings, loyalty, loading, error } = useUserData(
+    session?.user?.id
+  );
 
-  // Procurar dados do utilizador e agendamentos
-  useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        // Procurar perfil do utilizador
-        const { data: userData, error: userError } = await supabase
-          .from("users")
-          .select("*")
-          .eq("id", session.user.id)
-          .single();
-
-        if (userError) {
-          throw userError;
-        }
-
-        setUser(userData as User);
-
-        // Procurar agendamentos
-        const { data: bookingsData, error: bookingsError } = await supabase
-          .from("bookings")
-          .select("*")
-          .eq("user_id", session.user.id)
-          .order("date", { ascending: false });
-
-        if (bookingsError) {
-          throw bookingsError;
-        }
-
-        setBookings(bookingsData as Booking[]);
-
-        // Procurar pontos de fidelidade
-        const { data: loyaltyData, error: loyaltyError } = await supabase
-          .from("loyalty_points")
-          .select("*")
-          .eq("user_id", session.user.id)
-          .single();
-
-        if (!loyaltyError) {
-          setLoyalty(loyaltyData as LoyaltyPoints);
-        }
-      } catch {
-        toast.error("Erro ao carregar os seus dados. Tente novamente.");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchUserData();
-  }, [session]);
+  // Mostrar erro se houver
+  if (error) {
+    toast.error(error);
+  }
 
   // Verificar se o cancelamento está dentro do prazo permitido (até 4 horas antes)
   const canCancelBooking = (booking: Booking): boolean => {
@@ -165,8 +120,10 @@ export default function UserDashboard({
         throw error;
       }
 
-      setBookings((prev) => prev.filter((booking) => booking.id !== bookingId));
       toast.success("Marcação cancelada com sucesso!");
+
+      // Recarregar dados para manter sincronização
+      window.location.reload();
     } catch (error: any) {
       toast.error(
         error.message || "Erro ao cancelar marcação. Tente novamente."

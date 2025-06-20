@@ -89,12 +89,12 @@ export default function BookingAuthWrapper() {
     <div>
       {view === "dashboard" ? (
         <UserDashboard
-          session={{ user }}
+          session={{ user: user }}
           onLogout={handleLogout}
           onNewBooking={goToBookingForm}
         />
       ) : (
-        <BookingForm session={{ user }} onCancel={goToDashboard} />
+        <BookingForm session={{ user: user }} onCancel={goToDashboard} />
       )}
     </div>
   );

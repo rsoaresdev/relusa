@@ -271,24 +271,31 @@ export const useAuth = (): UseAuthReturn => {
       }, 100); // Debounce de 100ms
     });
 
-    // Listener para quando a tab volta ao foco
+    // Listener para quando a tab volta ao foco (com debounce)
+    let visibilityTimeout: NodeJS.Timeout | null = null;
     const handleVisibilityChange = () => {
-      if (document.visibilityState === "visible" && isInitialized.current) {
-        // Verificar se há mudanças de estado em outros tabs
-        const otherTabState = readStateFromOtherTabs();
-        if (otherTabState) {
-          const currentUserStr = JSON.stringify(user);
-          const otherUserStr = JSON.stringify(otherTabState.user);
+      if (visibilityTimeout) {
+        clearTimeout(visibilityTimeout);
+      }
 
-          if (
-            currentUserStr !== otherUserStr ||
-            isAdmin !== otherTabState.isAdmin
-          ) {
-            setUser(otherTabState.user);
-            setIsAdmin(otherTabState.isAdmin);
+      visibilityTimeout = setTimeout(() => {
+        if (document.visibilityState === "visible" && isInitialized.current) {
+          // Verificar se há mudanças de estado em outros tabs
+          const otherTabState = readStateFromOtherTabs();
+          if (otherTabState) {
+            const currentUserStr = JSON.stringify(user);
+            const otherUserStr = JSON.stringify(otherTabState.user);
+
+            if (
+              currentUserStr !== otherUserStr ||
+              isAdmin !== otherTabState.isAdmin
+            ) {
+              setUser(otherTabState.user);
+              setIsAdmin(otherTabState.isAdmin);
+            }
           }
         }
-      }
+      }, 500); // Debounce de 500ms
     };
 
     if (typeof window !== "undefined") {
@@ -303,6 +310,10 @@ export const useAuth = (): UseAuthReturn => {
         clearTimeout(syncTimeout.current);
       }
 
+      if (visibilityTimeout) {
+        clearTimeout(visibilityTimeout);
+      }
+
       if (typeof window !== "undefined") {
         document.removeEventListener(
           "visibilitychange",
@@ -310,7 +321,7 @@ export const useAuth = (): UseAuthReturn => {
         );
       }
     };
-  }, [user, isAdmin, broadcastToOtherTabs]);
+  }, [broadcastToOtherTabs]); // Removido user e isAdmin das dependências para evitar loops
 
   return {
     user,

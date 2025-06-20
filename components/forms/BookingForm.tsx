@@ -9,6 +9,7 @@ import { format } from "date-fns";
 import { pt } from "date-fns/locale";
 import { Calendar } from "@/components/ui/calendar";
 import { useEmailService } from "@/lib/hooks/useEmailService";
+import { useLoyaltyPoints } from "@/lib/hooks/useLoyaltyPoints";
 import {
   validatePortugueseLicensePlate,
   formatLicensePlate,
@@ -37,7 +38,6 @@ interface BookingFormProps {
 export default function BookingForm({ session, onCancel }: BookingFormProps) {
   const [loading, setLoading] = useState(false);
   const [date, setDate] = useState<Date | undefined>(undefined);
-  const [hasDiscount, setHasDiscount] = useState(false);
   const [licensePlateError, setLicensePlateError] = useState<string | null>(
     null
   );
@@ -61,28 +61,8 @@ export default function BookingForm({ session, onCancel }: BookingFormProps) {
   // Hook de email
   const emailService = useEmailService();
 
-  // Procurar pontos de fidelidade do utilizador
-  useEffect(() => {
-    const fetchLoyaltyPoints = async () => {
-      const { data, error } = await supabase
-        .from("loyalty_points")
-        .select("*")
-        .eq("user_id", session.user.id)
-        .single();
-
-      if (error && error.code !== "PGRST116") {
-        return;
-      }
-
-      if (data) {
-        const hasLoyaltyDiscount =
-          data.bookings_count > 0 && data.bookings_count % 5 === 4;
-        setHasDiscount(hasLoyaltyDiscount);
-      }
-    };
-
-    fetchLoyaltyPoints();
-  }, [session]);
+  // Hook para pontos de fidelidade
+  const { hasDiscount } = useLoyaltyPoints(session?.user?.id);
 
   // Verificar disponibilidade quando a data é selecionada
   useEffect(() => {
