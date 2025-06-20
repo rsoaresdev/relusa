@@ -13,7 +13,7 @@ if (!supabaseUrl || !supabaseAnonKey) {
 /**
  * Cliente Supabase configurado para a aplicação
  *
- * Configuração otimizada para manter sessões estáveis e evitar logouts automáticos
+ * Configuração otimizada para manter sessões estáveis e sincronizadas entre tabs
  */
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
@@ -22,8 +22,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     detectSessionInUrl: true,
     flowType: "pkce", // Usar PKCE flow que é mais seguro e confiável
     storage: typeof window !== "undefined" ? window.localStorage : undefined,
-    debug: false,
-    // Configurações para manter sessão por mais tempo
+    debug: process.env.NODE_ENV === "development",
     storageKey: "relusa-auth",
   },
   global: {
@@ -299,10 +298,10 @@ export const getBookingReview = async (
 export const getPublicReviews = async (): Promise<Review[]> => {
   try {
     // Sempre usar API route para consistência
-    const response = await fetch('/api/reviews/public', {
-      method: 'GET',
+    const response = await fetch("/api/reviews/public", {
+      method: "GET",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
     });
 
@@ -327,8 +326,11 @@ export const createReview = async (
 ): Promise<Review | null> => {
   try {
     // Primeiro, obter o utilizador autenticado
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
     if (authError || !user) {
       console.error("Erro de autenticação:", authError);
       return null;
@@ -353,7 +355,7 @@ export const createReview = async (
     }
 
     // Verificar se o serviço foi concluído
-    if (booking.status !== 'completed') {
+    if (booking.status !== "completed") {
       console.error("Só é possível avaliar serviços concluídos");
       return null;
     }
@@ -419,7 +421,7 @@ export const updateReviewStatus = async (
 ): Promise<boolean> => {
   try {
     const updateData: Partial<Review> = {};
-    
+
     if (isApproved !== undefined) updateData.is_approved = isApproved;
     if (isActive !== undefined) updateData.is_active = isActive;
 

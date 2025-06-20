@@ -125,7 +125,7 @@ export default function AuthForm({ view, toggleView }: AuthFormProps) {
     setLoading(true);
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email: formData.email,
         password: formData.password,
       });
@@ -134,8 +134,10 @@ export default function AuthForm({ view, toggleView }: AuthFormProps) {
         throw error;
       }
 
-      toast.success("Login efetuado com sucesso!");
-      // O estado será atualizado automaticamente pelo listener
+      if (data.session) {
+        toast.success("Login efetuado com sucesso!");
+        // O estado será atualizado automaticamente pelo AuthProvider
+      }
     } catch (error: any) {
       toast.error(traduzirErro(error.message));
     } finally {
@@ -181,6 +183,7 @@ export default function AuthForm({ view, toggleView }: AuthFormProps) {
           data: {
             name: formData.name,
             phone: formData.phone,
+            full_name: formData.name,
           },
         },
       });
@@ -194,8 +197,9 @@ export default function AuthForm({ view, toggleView }: AuthFormProps) {
           "Conta criada! Verifique o seu email para confirmar a conta."
         );
         toggleView(); // Mudar para login
-      } else {
+      } else if (data.session) {
         toast.success("Conta criada e login efetuado com sucesso!");
+        // O estado será atualizado automaticamente pelo AuthProvider
       }
     } catch (error: any) {
       toast.error(traduzirErro(error.message));

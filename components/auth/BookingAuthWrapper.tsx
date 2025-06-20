@@ -26,20 +26,13 @@ export default function BookingAuthWrapper() {
       }
 
       // Limpar URL de erros
-      const url = new URL(window.location.href);
-      url.searchParams.delete("error");
-      window.history.replaceState({}, document.title, url.pathname);
+      if (typeof window !== "undefined") {
+        const url = new URL(window.location.href);
+        url.searchParams.delete("error");
+        window.history.replaceState({}, document.title, url.pathname);
+      }
     }
   }, [searchParams]);
-
-  // Atualizar view baseado no estado do usuário
-  useEffect(() => {
-    if (user && !loading) {
-      setView("dashboard");
-    } else if (!user && !loading) {
-      setView("login");
-    }
-  }, [user, loading]);
 
   // Mostrar erro se houver
   useEffect(() => {
@@ -48,17 +41,19 @@ export default function BookingAuthWrapper() {
     }
   }, [error]);
 
-  const handleLogout = async () => {
-    try {
-      await signOut();
-      setView("login");
-    } catch (error) {
-      console.error("Erro ao terminar sessão:", error);
-      toast.error("Erro ao terminar sessão. A recarregar página...");
-      setTimeout(() => {
-        window.location.href = "/";
-      }, 1000);
+  // Atualizar view baseado no estado do usuário - apenas quando não está loading
+  useEffect(() => {
+    if (!loading) {
+      if (user) {
+        setView("dashboard");
+      } else {
+        setView("login");
+      }
     }
+  }, [user, loading]);
+
+  const handleLogout = async () => {
+    await signOut();
   };
 
   const toggleView = () => {

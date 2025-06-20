@@ -42,7 +42,7 @@ export default function ProtectedRoute({
   }
 
   if (!user || (requireAdmin && !isAdmin)) {
-    return null; // Será redirecionado
+    return null;
   }
 
   return <>{children}</>;

@@ -36,7 +36,7 @@ export default function SimpleProtectedRoute({
   }
 
   if (!user) {
-    return null; // Será redirecionado
+    return null;
   }
 
   return <>{children}</>;

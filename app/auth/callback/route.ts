@@ -11,15 +11,16 @@ export async function GET(request: NextRequest) {
   // Criar cliente Supabase para autenticação
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      auth: {
+        flowType: "pkce",
+        autoRefreshToken: true,
+        persistSession: true,
+        detectSessionInUrl: false, // Importante: não detetar na URL pois já se trata aqui
+      },
+    }
   );
-
-  console.log("[Auth Callback] Recebido:", {
-    code: !!code,
-    error,
-    error_description,
-    next,
-  });
 
   // Se houver erro nos parâmetros, redirecionar para página de erro
   if (error) {
@@ -34,8 +35,6 @@ export async function GET(request: NextRequest) {
   // Processar código de autorização (PKCE flow)
   if (code) {
     try {
-      console.log("[Auth Callback] Processando código PKCE");
-
       // Trocar o código por uma sessão
       const { data, error: exchangeError } =
         await supabase.auth.exchangeCodeForSession(code);
@@ -50,46 +49,8 @@ export async function GET(request: NextRequest) {
         );
       }
 
-      console.log("[Auth Callback] Código PKCE processado com sucesso", {
-        hasSession: !!data.session,
-        hasUser: !!data.user,
-      });
-
-      // Criar uma resposta de redirecionamento com cookies de autenticação
-      const response = NextResponse.redirect(`${origin}${next}?auth=success`);
-
-      // Definir cookies de sessão se existirem
-      if (data.session) {
-        // Usar a data de expiração do token ou 30 dias como padrão
-        const tokenExpiry = data.session.expires_at
-          ? new Date(data.session.expires_at * 1000)
-          : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 dias
-
-        response.cookies.set("sb-access-token", data.session.access_token, {
-          expires: tokenExpiry,
-          httpOnly: false,
-          secure: process.env.NODE_ENV === "production",
-          sameSite: "lax",
-          path: "/",
-        });
-
-        if (data.session.refresh_token) {
-          // Refresh token com duração mais longa
-          const refreshExpiry = new Date(
-            Date.now() + 365 * 24 * 60 * 60 * 1000
-          ); // 1 ano
-
-          response.cookies.set("sb-refresh-token", data.session.refresh_token, {
-            expires: refreshExpiry,
-            httpOnly: false,
-            secure: process.env.NODE_ENV === "production",
-            sameSite: "lax",
-            path: "/",
-          });
-        }
-      }
-
-      return response;
+      // Criar uma resposta de redirecionamento
+      return NextResponse.redirect(`${origin}${next}`);
     } catch (error) {
       console.error("[Auth Callback] Erro inesperado no callback:", error);
       return NextResponse.redirect(`${origin}/marcacoes?error=callback_failed`);
@@ -97,8 +58,5 @@ export async function GET(request: NextRequest) {
   }
 
   // Se não houver código, redirecionar para marcações
-  console.log(
-    "[Auth Callback] Nenhum código encontrado, redirecionando para marcações"
-  );
   return NextResponse.redirect(`${origin}/marcacoes`);
 }

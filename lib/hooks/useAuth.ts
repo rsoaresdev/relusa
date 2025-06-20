@@ -1,6 +1,7 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { supabase, User } from "@/lib/supabase/config";
-import type { Session, AuthChangeEvent } from "@supabase/supabase-js";
+import type { Session } from "@supabase/supabase-js";
+import { useTabSync } from "./useTabSync";
 
 interface UseAuthReturn {
   user: User | null;
@@ -16,301 +17,300 @@ export const useAuth = (): UseAuthReturn => {
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const mounted = useRef(true);
+  const isInitialized = useRef(false);
+  const syncTimeout = useRef<NodeJS.Timeout | null>(null);
 
-  // Função para buscar perfil do utilizador
-  const fetchUserProfile = useCallback(
-    async (
-      userId: string
-    ): Promise<{ user: User; isAdmin: boolean } | null> => {
-      try {
-        const [userResponse, adminResponse] = await Promise.all([
-          supabase.from("users").select("*").eq("id", userId).single(),
-          supabase.from("admins").select("id").eq("user_id", userId).single(),
-        ]);
-
-        // Se o utilizador não existe, criar um novo
-        if (userResponse.error?.code === "PGRST116") {
-          const { data: sessionData } = await supabase.auth.getSession();
-          const sessionUser = sessionData.session?.user;
-
-          if (sessionUser) {
-            const newUser = {
-              id: userId,
-              email: sessionUser.email || "",
-              name:
-                sessionUser.user_metadata?.full_name ||
-                sessionUser.user_metadata?.name ||
-                "Utilizador",
-              phone: "",
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString(),
-            };
-
-            const { data: createdUser, error: createError } = await supabase
-              .from("users")
-              .insert([newUser])
-              .select()
-              .single();
-
-            if (createError) {
-              console.error("Erro ao criar utilizador:", createError);
-              return null;
-            }
-
-            // Criar pontos de fidelidade
-            await supabase.from("loyalty_points").insert([
-              {
-                user_id: userId,
-                points: 0,
-                bookings_count: 0,
-              },
-            ]);
-
-            return {
-              user: createdUser as User,
-              isAdmin: !!adminResponse.data,
-            };
-          }
-        }
-
-        if (userResponse.error || !userResponse.data) {
-          console.error(
-            "Erro ao obter dados do utilizador:",
-            userResponse.error
-          );
-          return null;
-        }
-
-        return {
-          user: userResponse.data as User,
-          isAdmin: !!adminResponse.data,
-        };
-      } catch (error) {
-        console.error("Erro ao procurar perfil do utilizador:", error);
-        return null;
-      }
-    },
-    []
-  );
-
-  // Função para atualizar estado do auth
-  const updateAuthState = useCallback(
-    async (session: Session | null) => {
-      if (!mounted.current) return;
-
-      try {
-        setError(null);
-
-        if (!session?.user) {
-          setUser(null);
-          setIsAdmin(false);
-          setLoading(false);
-          return;
-        }
-
-        const userProfile = await fetchUserProfile(session.user.id);
-
-        if (mounted.current) {
-          if (userProfile) {
-            setUser(userProfile.user);
-            setIsAdmin(userProfile.isAdmin);
-          } else {
-            // Se não conseguir obter o perfil, tentar refresh da sessão
-            console.warn("Perfil não encontrado, tentando refresh da sessão");
-            try {
-              const { data } = await supabase.auth.refreshSession();
-              if (data.session) {
-                const retryProfile = await fetchUserProfile(
-                  data.session.user.id
-                );
-                if (retryProfile) {
-                  setUser(retryProfile.user);
-                  setIsAdmin(retryProfile.isAdmin);
-                } else {
-                  setUser(null);
-                  setIsAdmin(false);
-                }
-              } else {
-                setUser(null);
-                setIsAdmin(false);
-              }
-            } catch (refreshError) {
-              console.error("Erro ao fazer refresh da sessão:", refreshError);
-              setUser(null);
-              setIsAdmin(false);
-            }
-          }
-          setLoading(false);
-        }
-      } catch (error) {
-        console.error("Erro ao atualizar estado de auth:", error);
-        if (mounted.current) {
-          setError("Erro ao verificar autenticação");
-          setLoading(false);
-        }
-      }
-    },
-    [fetchUserProfile]
-  );
-
-  // Função para refresh do utilizador
-  const refreshUser = useCallback(async () => {
-    if (!mounted.current) return;
-
-    try {
-      setLoading(true);
-      const { data } = await supabase.auth.getSession();
-      await updateAuthState(data.session);
-    } catch (error) {
-      console.error("Erro ao refresh do utilizador:", error);
-      if (mounted.current) {
-        setError("Erro ao atualizar utilizador");
+  // Hook para sincronização entre tabs
+  const { broadcastToOtherTabs } = useTabSync(
+    // Callback para mudanças de estado de auth de outros tabs
+    (authData) => {
+      if (authData) {
+        setUser(authData.user);
+        setIsAdmin(authData.isAdmin);
         setLoading(false);
       }
+    },
+    // Callback para logout de outros tabs
+    () => {
+      setUser(null);
+      setIsAdmin(false);
+      setError(null);
+      setLoading(false);
     }
-  }, [updateAuthState]);
+  );
+
+  // Função para sincronizar estado entre tabs
+  const syncStateAcrossTabs = (data: {
+    user: User | null;
+    isAdmin: boolean;
+  }) => {
+    if (typeof window !== "undefined") {
+      try {
+        localStorage.setItem(
+          "relusa-auth-state",
+          JSON.stringify({
+            user: data.user,
+            isAdmin: data.isAdmin,
+            timestamp: Date.now(),
+          })
+        );
+
+        // Broadcast para outros tabs
+        broadcastToOtherTabs("AUTH_STATE_CHANGE", data);
+      } catch (error) {
+        console.error("Erro ao sincronizar estado:", error);
+      }
+    }
+  };
+
+  // Função para ler estado de outros tabs
+  const readStateFromOtherTabs = () => {
+    if (typeof window !== "undefined") {
+      try {
+        const stored = localStorage.getItem("relusa-auth-state");
+        if (stored) {
+          const data = JSON.parse(stored);
+          // Apenas usar dados recentes (menos de 1 minuto)
+          if (Date.now() - data.timestamp < 60000) {
+            return data;
+          }
+        }
+      } catch (error) {
+        console.error("Erro ao ler estado de outros tabs:", error);
+      }
+    }
+    return null;
+  };
+
+  // Função para buscar dados do utilizador
+  const fetchUserData = async (session: Session | null, skipSync = false) => {
+    if (!session?.user) {
+      setUser(null);
+      setIsAdmin(false);
+      setLoading(false);
+
+      if (!skipSync) {
+        syncStateAcrossTabs({ user: null, isAdmin: false });
+      }
+      return;
+    }
+
+    try {
+      // Buscar dados do utilizador
+      const { data: userData, error: userError } = await supabase
+        .from("users")
+        .select("*")
+        .eq("id", session.user.id)
+        .single();
+
+      // Se utilizador não existe, criar
+      if (userError?.code === "PGRST116") {
+        const newUser = {
+          id: session.user.id,
+          email: session.user.email || "",
+          name:
+            session.user.user_metadata?.full_name ||
+            session.user.user_metadata?.name ||
+            "Utilizador",
+          phone: "",
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        };
+
+        const { data: createdUser, error: createError } = await supabase
+          .from("users")
+          .insert([newUser])
+          .select()
+          .single();
+
+        if (!createError && createdUser) {
+          // Criar pontos de fidelidade
+          await supabase.from("loyalty_points").insert([
+            {
+              user_id: session.user.id,
+              points: 0,
+              bookings_count: 0,
+            },
+          ]);
+
+          setUser(createdUser as User);
+        }
+      } else if (!userError && userData) {
+        setUser(userData as User);
+      }
+
+      // Verificar se é admin
+      const { data: adminData } = await supabase
+        .from("admins")
+        .select("id")
+        .eq("user_id", session.user.id)
+        .single();
+
+      const isUserAdmin = !!adminData;
+      setIsAdmin(isUserAdmin);
+
+      // Sincronizar com outros tabs
+      if (!skipSync) {
+        syncStateAcrossTabs({
+          user: (userData as User) || null,
+          isAdmin: isUserAdmin,
+        });
+      }
+    } catch (error) {
+      console.error("Erro ao buscar dados do utilizador:", error);
+      setError("Erro ao carregar dados do utilizador");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Função para refresh
+  const refreshUser = async () => {
+    setLoading(true);
+    const { data } = await supabase.auth.getSession();
+    await fetchUserData(data.session);
+  };
 
   // Função de logout
-  const signOut = useCallback(async () => {
+  const signOut = async () => {
+    setLoading(true);
+
     try {
-      // Limpar estado local primeiro
+      await supabase.auth.signOut();
+
+      // Limpar localStorage
+      if (typeof window !== "undefined") {
+        const keys = Object.keys(localStorage);
+        keys.forEach((key) => {
+          if (
+            key.includes("supabase") ||
+            key.includes("auth") ||
+            key.includes("relusa-auth")
+          ) {
+            localStorage.removeItem(key);
+          }
+        });
+      }
+
       setUser(null);
       setIsAdmin(false);
       setError(null);
 
-      // Terminar sessão no Supabase
-      await supabase.auth.signOut();
+      // Broadcast logout para outros tabs
+      broadcastToOtherTabs("LOGOUT");
 
-      // Limpar localStorage manualmente (incluindo a nova chave)
-      if (typeof window !== "undefined") {
-        try {
-          const keys = Object.keys(localStorage);
-          keys.forEach((key) => {
-            if (
-              key.includes("supabase") ||
-              key.includes("auth") ||
-              key.includes("relusa-auth")
-            ) {
-              localStorage.removeItem(key);
-            }
-          });
-        } catch (error) {
-          console.error("Erro ao limpar localStorage:", error);
-        }
-      }
-
-      // Redirecionar para home
+      // Redirecionar
       if (typeof window !== "undefined") {
         window.location.href = "/";
       }
     } catch (error) {
       console.error("Erro no logout:", error);
-      // Forçar redirecionamento mesmo com erro
       if (typeof window !== "undefined") {
         window.location.href = "/";
       }
+    } finally {
+      setLoading(false);
     }
-  }, []);
+  };
 
-  // Effect principal para inicialização e listener de auth
+  // Inicialização
   useEffect(() => {
-    mounted.current = true;
+    let mounted = true;
 
-    // Função para inicializar
-    const initialize = async () => {
+    const initAuth = async () => {
       try {
-        // Verificar se há parâmetro auth=success na URL (callback de OAuth)
-        if (typeof window !== "undefined") {
-          const urlParams = new URLSearchParams(window.location.search);
-          if (urlParams.get("auth") === "success") {
-            // Remover parâmetro da URL
-            window.history.replaceState(
-              {},
-              document.title,
-              window.location.pathname
-            );
-            // Aguardar um pouco para garantir que a sessão foi definida
-            await new Promise((resolve) => setTimeout(resolve, 500));
+        // Primeiro, tentar ler estado de outros tabs se não foi inicializado ainda
+        if (!isInitialized.current) {
+          const otherTabState = readStateFromOtherTabs();
+          if (otherTabState && otherTabState.user) {
+            setUser(otherTabState.user);
+            setIsAdmin(otherTabState.isAdmin);
+            setLoading(false);
+            isInitialized.current = true;
+            return;
           }
         }
 
         const { data } = await supabase.auth.getSession();
-        await updateAuthState(data.session);
+        if (mounted) {
+          await fetchUserData(data.session);
+          isInitialized.current = true;
+        }
       } catch (error) {
         console.error("Erro na inicialização:", error);
-        if (mounted.current) {
+        if (mounted) {
           setError("Erro ao inicializar autenticação");
           setLoading(false);
         }
       }
     };
 
-    // Inicializar
-    initialize();
+    initAuth();
 
-    // Listener para mudanças de auth
+    // Listener para mudanças de autenticação
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(
-      async (event: AuthChangeEvent, session: Session | null) => {
-        console.log("Auth state change:", event, !!session);
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (!mounted) return;
 
-        if (!mounted.current) return;
+      // Debounce para evitar múltiplas chamadas rápidas
+      if (syncTimeout.current) {
+        clearTimeout(syncTimeout.current);
+      }
 
-        // Para eventos de logout, limpar estado imediatamente
+      syncTimeout.current = setTimeout(async () => {
         if (event === "SIGNED_OUT") {
           setUser(null);
           setIsAdmin(false);
+          setError(null);
           setLoading(false);
-          return;
+          broadcastToOtherTabs("LOGOUT");
+        } else if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
+          await fetchUserData(session);
         }
+      }, 100); // Debounce de 100ms
+    });
 
-        // Para TOKEN_REFRESHED, apenas atualizar sem logs desnecessários
-        if (event === "TOKEN_REFRESHED") {
-          if (session?.user?.id) {
-            await updateAuthState(session);
+    // Listener para quando a tab volta ao foco
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible" && isInitialized.current) {
+        // Verificar se há mudanças de estado em outros tabs
+        const otherTabState = readStateFromOtherTabs();
+        if (otherTabState) {
+          const currentUserStr = JSON.stringify(user);
+          const otherUserStr = JSON.stringify(otherTabState.user);
+
+          if (
+            currentUserStr !== otherUserStr ||
+            isAdmin !== otherTabState.isAdmin
+          ) {
+            setUser(otherTabState.user);
+            setIsAdmin(otherTabState.isAdmin);
           }
-          return;
-        }
-
-        // Para outros eventos, atualizar estado
-        await updateAuthState(session);
-      }
-    );
-
-    // Configurar refresh automático de sessão a cada 15 minutos
-    const refreshInterval = setInterval(async () => {
-      if (mounted.current) {
-        try {
-          const {
-            data: { session },
-          } = await supabase.auth.getSession();
-          if (session) {
-            // Verificar se o token expira em menos de 5 minutos
-            const expiresAt = session.expires_at || 0;
-            const now = Math.floor(Date.now() / 1000);
-            const timeUntilExpiry = expiresAt - now;
-
-            // Se expira em menos de 5 minutos, fazer refresh
-            if (timeUntilExpiry < 300) {
-              console.log("Fazendo refresh preventivo do token");
-              await supabase.auth.refreshSession();
-            }
-          }
-        } catch (error) {
-          console.error("Erro no refresh automático:", error);
         }
       }
-    }, 15 * 60 * 1000); // 15 minutos
-
-    // Cleanup
-    return () => {
-      mounted.current = false;
-      subscription.unsubscribe();
-      clearInterval(refreshInterval);
     };
-  }, [updateAuthState]);
+
+    if (typeof window !== "undefined") {
+      document.addEventListener("visibilitychange", handleVisibilityChange);
+    }
+
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+
+      if (syncTimeout.current) {
+        clearTimeout(syncTimeout.current);
+      }
+
+      if (typeof window !== "undefined") {
+        document.removeEventListener(
+          "visibilitychange",
+          handleVisibilityChange
+        );
+      }
+    };
+  }, [user, isAdmin, broadcastToOtherTabs]);
 
   return {
     user,

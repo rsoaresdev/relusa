@@ -11,6 +11,7 @@ import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import { AuthProvider } from "@/components/auth";
+import { AuthDebug } from "@/components/auth/AuthDebug";
 import { PromoPopup } from "@/components/ui/promo-popup";
 import { CookieConsent } from "@/components/ui/cookie-consent";
 
@@ -24,6 +25,7 @@ const poppins = Poppins({
   weight: ["300", "400", "500", "600", "700"],
   subsets: ["latin"],
 });
+
 export const metadata: Metadata = {
   title: "Relusa - O seu carro não recusa",
   description:
@@ -107,6 +109,7 @@ export default function RootLayout({
             <main className="min-h-screen overflow-x-hidden">{children}</main>
             <Footer />
             <CookieConsent />
+            <AuthDebug enabled={process.env.NODE_ENV === "development"} />
           </AuthProvider>
         </ThemeProvider>
 
