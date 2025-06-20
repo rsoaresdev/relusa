@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
   if (code) {
     try {
       // Trocar o código por uma sessão
-      const { data, error: exchangeError } =
+      const { error: exchangeError } =
         await supabase.auth.exchangeCodeForSession(code);
 
       if (exchangeError) {
